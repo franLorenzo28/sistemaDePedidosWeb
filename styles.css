@@ -92,5 +92,48 @@ textarea { min-height: 64px; resize: vertical; }
 .station-queue .item-detail { font-size: .94rem; }
 .station-queue .order-actions .btn { min-height: 48px; font-size: .95rem; }
 .station-queue > div:has(.empty) { opacity: .75; }
-@media (max-width: 760px) { .topbar { align-items: flex-start; flex-direction: column; } .main-nav { width: 100%; } .layout { grid-template-columns: 1fr; } .choice-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 460px) { .station-stats { gap: 6px; } .station-stat { padding: 11px 9px; } .station-stat strong { font-size: 1.45rem; } .station-stat span { font-size: .7rem; } }
+@media (max-width: 760px) {
+  body { -webkit-text-size-adjust: 100%; }
+  .topbar { position: sticky; top: 0; z-index: 10; min-height: auto; padding: 10px 12px 8px; align-items: stretch; flex-direction: column; gap: 8px; }
+  .brand { font-size: 1.05rem; }
+  .brand-mark { font-size: 1.45rem; }
+  .main-nav { width: calc(100% + 4px); margin: 0 -2px; gap: 4px; padding-bottom: 2px; scrollbar-width: none; }
+  .main-nav::-webkit-scrollbar { display: none; }
+  .nav-link { min-height: 42px; padding: 11px 13px; display: inline-flex; align-items: center; font-size: .83rem; }
+  .app-shell { padding: 22px 12px 42px; }
+  .eyebrow { margin: 0 0 7px; font-size: .7rem; }
+  .page-title { font-size: 1.75rem; line-height: 1.1; }
+  .page-subtitle { margin-bottom: 20px; line-height: 1.4; }
+  .layout { grid-template-columns: 1fr; gap: 18px; }
+  .card { padding: 16px; border-radius: 16px; }
+  .form-section { padding: 13px 0; }
+  input, textarea, select { min-height: 46px; padding: 11px 12px; font-size: 16px; }
+  textarea { min-height: 82px; }
+  .field-label { margin-top: 13px; }
+  .choice label { min-height: 54px; padding: 11px 9px; display: flex; flex-direction: column; justify-content: center; }
+  .quantity-row { grid-template-columns: 1fr 82px; }
+  .btn { min-height: 48px; padding: 12px 14px; }
+  .stats { margin-bottom: 14px; }
+  .stat { flex: 1; min-width: 0; padding: 10px 12px; }
+  .order-card { padding: 14px; border-left-width: 5px; }
+  .order-head { align-items: center; }
+  .order-number { font-size: 1.2rem; }
+  .order-actions { margin-top: 14px; }
+  .order-actions .btn { min-height: 48px; }
+  .station-stats { gap: 6px; margin-bottom: 20px; }
+  .station-stat { padding: 11px 9px; }
+  .station-stat strong { font-size: 1.45rem; }
+  .station-stat span { font-size: .7rem; }
+  .station-queue { gap: 20px; }
+  .station-queue .order-card { padding: 15px; }
+  .station-queue .item-line { padding: 12px 0; }
+  .toast { right: 12px; bottom: 12px; left: 12px; text-align: center; }
+}
+@media (max-width: 420px) {
+  .app-shell { padding-inline: 10px; }
+  .choice-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .choice label { font-size: .8rem; }
+  .quantity-row { grid-template-columns: 1fr 76px; }
+  .order-head { align-items: flex-start; }
+  .badge { white-space: nowrap; }
+}
