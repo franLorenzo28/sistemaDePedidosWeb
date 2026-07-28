@@ -117,7 +117,7 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .product-controls .quantity-control { grid-column: 1 / -1; grid-row: 3; max-width: 92px; }
 .caja-form .product-controls .detail-control { grid-row: 4; }
 .caja-form .product-controls .ingredient-control { grid-column: 1 / -1; grid-row: 2; }
-.caja-form .ingredient-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.caja-form .ingredient-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .caja-form .ingredient-grid .choice label { min-height: 36px; padding: 7px 8px; font-size: .74rem; text-align: center; }
 .caja-form .product-controls .field-label { white-space: nowrap; }
 .caja-form .product-controls .field-label { margin: 0 0 2px; font-size: .68rem; }
