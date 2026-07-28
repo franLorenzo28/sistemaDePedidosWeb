@@ -100,10 +100,6 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
             </div>
           </div>
 
-          <PanchoSection visible={activeSection === 'Panchos'} onAdd={addDraftItem} />
-          <HamburguesaSection visible={activeSection === 'Hamburguesas'} onAdd={addDraftItem} />
-          <PizzaSection visible={activeSection === 'Pizza'} onAdd={addDraftItem} />
-
           {draft.length > 0 && (
             <div className="form-section draft-section">
               <label className="field-label">Resumen del pedido</label>
@@ -121,6 +117,10 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
               </div>
             </div>
           )}
+
+          <PanchoSection visible={activeSection === 'Panchos'} onAdd={addDraftItem} />
+          <HamburguesaSection visible={activeSection === 'Hamburguesas'} onAdd={addDraftItem} />
+          <PizzaSection visible={activeSection === 'Pizza'} onAdd={addDraftItem} />
 
           <div className="form-section">
             <label className="field-label">Notas generales</label>
