@@ -130,6 +130,7 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .pizza-section .quantity-row { display: block; }
 .caja-form .pizza-section > .field-label { display: none; }
 .caja-form .pizza-section .pizza-quantity-control { display: flex; flex-direction: column; gap: 2px; width: 92px; margin-top: 9px; }
+.caja-form .pizza-section .pizza-detail-control { margin-top: 9px; }
 .caja-form .pizza-section > .btn { margin-top: 7px; }
 @media (min-width: 761px) {
   .app-shell:has(.caja-layout) { padding-top: 18px; }
