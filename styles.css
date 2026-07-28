@@ -77,13 +77,52 @@ textarea { min-height: 64px; resize: vertical; }
 .notice { padding: 12px 14px; margin-bottom: 18px; border-radius: 10px; background: #fff2bf; color: #695316; font-size: .86rem; }
 .toast { position: fixed; right: 18px; bottom: 18px; z-index: 5; padding: 13px 16px; color: white; background: var(--green-950); border-radius: 10px; box-shadow: 0 8px 25px #0003; transform: translateY(130%); transition: transform .25s; }
 .toast.show { transform: translateY(0); }
-.caja-layout { grid-template-columns: minmax(560px, 1.15fr) minmax(420px, 1fr); }
-.caja-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+.caja-layout { grid-template-columns: minmax(680px, 1.35fr) minmax(360px, .8fr); gap: 18px; }
+.caja-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: max-content; align-items: start; gap: 0 14px; padding: 16px 18px; }
 .caja-form > .form-section:first-child,
 .caja-form > .form-section:nth-last-of-type(1),
 .caja-form > .btn { grid-column: 1 / -1; }
 .caja-form .form-section { min-width: 0; }
-.caja-form .quantity-row { grid-template-columns: 1fr 82px; }
+.caja-form .form-section { padding: 9px 0; }
+.caja-form .form-section:first-child { padding-bottom: 8px; }
+.caja-form .form-section h3 { margin-bottom: 8px; }
+.caja-form .field-label { margin: 7px 0 4px; }
+.caja-form input, .caja-form select { padding: 8px 10px; min-height: 40px; }
+.caja-form textarea { min-height: 52px; }
+.caja-form .quantity-row { grid-template-columns: 1fr 64px; gap: 6px; }
+.caja-form .choice-grid { gap: 5px; }
+.caja-form .choice label { min-height: 40px; padding: 8px; font-size: .78rem; }
+.caja-form .btn { min-height: 42px; padding: 9px 12px; }
+.caja-form .item-line { padding: 5px 0; font-size: .82rem; }
+.caja-form > .form-section:nth-child(2),
+.caja-form > .form-section:nth-child(3),
+.caja-form > .form-section:nth-child(4) { grid-column: span 1; }
+.caja-form .product-controls { display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 0 6px; }
+.caja-form .product-controls > div:first-child,
+.caja-form .product-controls .detail-control { grid-column: 1 / -1; }
+.caja-form .product-controls .quantity-control { grid-column: 2; grid-row: 2; }
+.caja-form .product-controls .detail-control { grid-row: 3; }
+.caja-form .product-controls .field-label { white-space: nowrap; }
+.caja-form .product-controls .field-label { margin: 0 0 2px; font-size: .68rem; }
+.caja-form .product-controls input,
+.caja-form .product-controls select { min-height: 32px; padding: 5px 7px; font-size: .78rem; }
+.caja-form .product-section > .btn { margin-top: 7px; }
+.caja-form .pizza-section .quantity-row { grid-template-columns: 1fr 54px; align-items: start; }
+.caja-form .pizza-section .choice-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.caja-form .pizza-section .choice label { min-height: 34px; padding: 6px 4px; font-size: .7rem; text-align: center; }
+.caja-form .pizza-section .choice label small { font-size: .62rem; }
+.caja-form .pizza-section > .btn { margin-top: 7px; }
+@media (min-width: 761px) {
+  .app-shell:has(.caja-layout) { padding-top: 18px; }
+  .app-shell:has(.caja-layout) .eyebrow { margin: 0 0 4px; }
+  .app-shell:has(.caja-layout) .page-title { font-size: 1.9rem; }
+  .app-shell:has(.caja-layout) .page-subtitle { margin-bottom: 12px; font-size: .9rem; }
+  .caja-form > .form-section:first-child h2 { margin-bottom: 6px; font-size: 1.1rem; }
+  .caja-form > .form-section:first-child .field-label,
+  .caja-form > .form-section:nth-last-of-type(1) .field-label { margin: 2px 0; font-size: .72rem; }
+  .caja-form > .form-section:first-child input { min-height: 32px; padding: 5px 7px; }
+  .caja-form > .form-section:nth-last-of-type(1) textarea { min-height: 42px; }
+}
 .station-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 4px 0 24px; }
 .station-stat { padding: 13px 14px; border: 1px solid var(--line); border-radius: 14px; background: white; }
 .station-stat strong { display: block; font-size: 1.7rem; line-height: 1; color: var(--green-950); }
@@ -114,6 +153,11 @@ textarea { min-height: 64px; resize: vertical; }
   .layout { grid-template-columns: 1fr; gap: 18px; }
   .caja-layout { grid-template-columns: 1fr; }
   .caja-form { display: block; }
+  .caja-form .product-controls input,
+  .caja-form .product-controls select { min-height: 46px; padding: 11px 12px; font-size: 16px; }
+  .caja-form .pizza-section .choice-grid { grid-template-columns: 1fr 1fr; }
+  .caja-form .pizza-section .choice label { min-height: 54px; padding: 11px 9px; font-size: .86rem; text-align: left; }
+  .caja-form .pizza-section .choice label small { font-size: .75rem; }
   .card { padding: 16px; border-radius: 16px; }
   .form-section { padding: 13px 0; }
   input, textarea, select { min-height: 46px; padding: 11px 12px; font-size: 16px; }
