@@ -317,9 +317,13 @@ function PizzaSection({ visible, onAdd }) {
             {PIZZA_TYPE_OPTIONS.map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
-        <div>
+        <div className="quantity-control">
+          <label className="field-label">Cant.</label>
+          <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
+        </div>
+        <div className="detail-control">
           <label className="field-label">Sabores</label>
-          <div className="choice-grid">
+          <div className="ingredient-grid">
             {PIZZA_FLAVORS.map(f => (
               <div key={f.value} className="choice">
                 <input id={`pizza-${f.value}`} type="checkbox" value={f.value}
@@ -330,14 +334,7 @@ function PizzaSection({ visible, onAdd }) {
               </div>
             ))}
           </div>
-        </div>
-        <div className="quantity-control">
-          <label className="field-label">Cant.</label>
-          <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
-        </div>
-        <div className="detail-control">
-          <label className="field-label">Detalles</label>
-          <input placeholder="Ej: bien cocida" value={extra} onChange={e => setExtra(e.target.value)} />
+          <input placeholder="Detalle extra" value={extra} onChange={e => setExtra(e.target.value)} />
         </div>
       </div>
       <button type="button" className="btn btn-ghost full" onClick={handleAdd}>+ Agregar pizza</button>
