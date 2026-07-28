@@ -118,11 +118,12 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .product-controls .detail-control { grid-row: 4; }
 .caja-form .product-controls .ingredient-control { grid-column: 1 / -1; grid-row: 2; }
 .caja-form .ingredient-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.caja-form .ingredient-grid .choice label { min-height: 42px; padding: 9px 10px; font-size: .84rem; text-align: center; font-weight: 700; }
-.caja-form .product-controls .field-label { white-space: nowrap; margin: 0 0 3px; font-size: .78rem; }
+.caja-form .ingredient-grid .choice label { min-height: 42px; padding: 9px 10px; font-size: .85rem; line-height: 1.2; text-align: center; font-weight: 700; }
+.caja-form .ingredient-grid .choice label small { display: block; margin-top: 2px; font-size: .75rem; line-height: 1.2; font-weight: 700; color: var(--muted); }
+.caja-form .product-controls .field-label { white-space: nowrap; margin: 0 0 3px; font-size: .84rem; }
 .caja-form .product-controls input,
-.caja-form .product-controls select { min-height: 44px; padding: 9px 12px; font-size: .88rem; }
-.caja-form .product-section > .btn { margin-top: 10px; min-height: 48px; font-size: .92rem; }
+.caja-form .product-controls select { min-height: 44px; padding: 9px 12px; font-size: .9rem; }
+.caja-form .product-section > .btn { margin-top: 10px; min-height: 48px; font-size: .9rem; line-height: 1.2; display: flex; align-items: center; justify-content: center; text-align: center; }
 .caja-layout > section { max-height: none; }
 .compact-order { padding: 6px 10px; }
 .caja-sidebar { overflow-y: auto; max-height: none; }
