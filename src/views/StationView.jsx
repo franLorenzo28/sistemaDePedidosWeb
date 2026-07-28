@@ -1,13 +1,18 @@
 import PageHeader from '../components/PageHeader.jsx';
 import OrderCard from '../components/OrderCard.jsx';
-import { STATION_LABELS, stationStatus } from '../lib/utils.js';
+import { STATION_LABELS, stationStatus, STATION_ICONS } from '../lib/utils.js';
 import { showToast } from '../hooks/useOrders.js';
 
-export default function StationView({ station, orders, onUpdate, onDelete }) {
+const SECTIONS = [
+  { key: 'pendiente', label: 'Por hacer', color: '#92400e', bg: '#fde68a', border: '#f59e0b' },
+  { key: 'preparando', label: 'En preparación', color: '#1e3a5f', bg: '#93c5fd', border: '#3b82f6' },
+  { key: 'listo', label: 'Listos', color: '#14532d', bg: '#86efac', border: '#16a34a' },
+];
+
+export default function StationView({ station, orders, onUpdate }) {
   const active = orders.filter(o => o.status !== 'entregado' && o.items.some(item => item.station === station));
-  const pending = active.filter(o => stationStatus(o, station) === 'pendiente');
-  const preparing = active.filter(o => stationStatus(o, station) === 'preparando');
-  const ready = active.filter(o => stationStatus(o, station) === 'listo');
+  const stationIcon = STATION_ICONS[station] || '';
+  const stationLabel = STATION_LABELS[station];
 
   const handleAction = async (id, action, st) => {
     await onUpdate(id, action, st);
@@ -17,36 +22,30 @@ export default function StationView({ station, orders, onUpdate, onDelete }) {
   return (
     <>
       <PageHeader
-        title={`Sector ${STATION_LABELS[station]}`}
-        subtitle={`Prepará en orden los pedidos de ${STATION_LABELS[station].toLowerCase()}. Tocá un pedido para avanzar su estado.`}
+        title={`${stationIcon} Sector ${stationLabel}`}
+        subtitle={`Prepará en orden los pedidos de ${stationLabel.toLowerCase()}. Tocá un pedido para avanzar su estado.`}
       />
-      <div className="station-stats">
-        <div className="station-stat pending"><strong>{pending.length}</strong><span>por hacer</span></div>
-        <div className="station-stat preparing"><strong>{preparing.length}</strong><span>en preparación</span></div>
-        <div className="station-stat ready"><strong>{ready.length}</strong><span>listos</span></div>
-      </div>
-      <div className="station-queue">
-        <OrderList title="Siguiente en cola" orders={pending} station={station} onAction={handleAction} onDelete={onDelete} />
-        <OrderList title="En preparación" orders={preparing} station={station} onAction={handleAction} onDelete={onDelete} />
-        <OrderList title="Listos · esperando entrega" orders={ready} station={station} onAction={handleAction} onDelete={onDelete} />
+<div className="station-queue">
+        {SECTIONS.map(s => {
+          const sectionOrders = active.filter(o => stationStatus(o, station) === s.key);
+          const sorted = sectionOrders
+            .filter(o => o.items.some(item => item.station === station))
+            .sort((a, b) => Number(a.number) - Number(b.number));
+          return (
+            <div key={s.key} className="station-section">
+              <div className="station-section-header" style={{ borderLeftColor: s.border, background: s.bg }}>
+                <h2>{s.label} <span className="section-count" style={{ color: s.color }}>{sorted.length}</span></h2>
+              </div>
+              <div className="order-list">
+                {sorted.length
+                  ? sorted.map(o => <OrderCard key={o.id} order={o} station={station} onAction={handleAction} />)
+                  : <div className="empty">No hay pedidos</div>
+                }
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
-  );
-}
-
-function OrderList({ title, orders, station, onAction, onDelete }) {
-  const sorted = orders
-    .filter(o => o.items.some(item => item.station === station))
-    .sort((a, b) => Number(a.number) - Number(b.number));
-  return (
-    <div>
-      <h2>{title}</h2>
-      <div className="order-list">
-        {sorted.length
-          ? sorted.map(o => <OrderCard key={o.id} order={o} station={station} onAction={onAction} onDelete={onDelete} />)
-          : <div className="empty">No hay pedidos para mostrar.</div>
-        }
-      </div>
-    </div>
   );
 }

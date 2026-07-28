@@ -2,17 +2,17 @@ import PageHeader from '../components/PageHeader.jsx';
 import OrderCard from '../components/OrderCard.jsx';
 import { showToast } from '../hooks/useOrders.js';
 
-export default function EntregaView({ orders, onUpdate, onDelete }) {
+export default function EntregaView({ orders, onUpdate }) {
   const ready = orders.filter(o => o.status === 'listo');
 
-  const handleAction = async (id, action) => {
-    await onUpdate(id, action, null);
-    showToast(`Pedido actualizado: Entregado.`);
+  const handleAction = async (id) => {
+    await onUpdate(id, 'entregado', null);
+    showToast('Pedido actualizado: Entregado.');
   };
 
   return (
     <>
-      <PageHeader title="Entrega" subtitle="Acá aparecen los pedidos completos que cocina marcó como listos." />
+      <PageHeader title="🚗 Entrega" subtitle="Pedidos listos para entregar al cliente." />
       <div className="stats">
         <div className="stat"><strong>{ready.length}</strong><span>Para entregar</span></div>
       </div>
@@ -22,8 +22,8 @@ export default function EntregaView({ orders, onUpdate, onDelete }) {
           {ready.length
             ? ready
                 .sort((a, b) => Number(a.number) - Number(b.number))
-                .map(o => <OrderCard key={o.id} order={o} station={null} onAction={handleAction} onDelete={onDelete} />)
-            : <div className="empty">No hay pedidos para mostrar.</div>
+                .map(o => <OrderCard key={o.id} order={o} station={null} onAction={handleAction} />)
+            : <div className="empty">No hay pedidos para entregar.</div>
           }
         </div>
       </div>

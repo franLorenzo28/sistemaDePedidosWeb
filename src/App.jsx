@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 ];
 
 export default function App() {
-  const { orders, addOrder, updateOrder, saveEditedOrder, deleteOrder } = useOrders();
+  const { orders, addOrder, updateOrder, saveEditedOrder, deleteOrder, clearAllOrders, toggleSound, soundEnabled } = useOrders();
   const [view, setView] = useState(() => new URLSearchParams(location.search).get('vista') || 'caja');
   const [editingOrder, setEditingOrder] = useState(null);
 
@@ -38,11 +38,11 @@ export default function App() {
 
   return (
     <>
-      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} />
+      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} />
       <main className="app-shell">
-        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={updateOrder} onDelete={deleteOrder} />}
-        {view === 'entrega' && <EntregaView orders={orders} onUpdate={updateOrder} onDelete={deleteOrder} />}
-        {['panchos', 'hamburguesas', 'pizzas'].includes(view) && <StationView station={view} orders={orders} onUpdate={updateOrder} onDelete={deleteOrder} />}
+        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={updateOrder} onDelete={deleteOrder} onClearAll={clearAllOrders} />}
+        {view === 'entrega' && <EntregaView orders={orders} onUpdate={updateOrder} />}
+        {['panchos', 'hamburguesas', 'pizzas'].includes(view) && <StationView station={view} orders={orders} onUpdate={updateOrder} />}
       </main>
       {editingOrder && (
         <EditModal order={editingOrder} onSave={handleSaveEdit} onClose={() => setEditingOrder(null)} />

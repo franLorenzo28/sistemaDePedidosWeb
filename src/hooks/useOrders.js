@@ -11,12 +11,24 @@ function saveLocal(orders) {
   localStorage.setItem('lobabi-orders', JSON.stringify(orders));
 }
 
+function loadSoundPref() {
+  try { return JSON.parse(localStorage.getItem('lobabi-sound') || 'true'); } catch { return true; }
+}
+function saveSoundPref(val) { localStorage.setItem('lobabi-sound', JSON.stringify(val)); }
+
 export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(loadSoundPref);
   const supabaseRef = useRef(null);
   const channelRef = useRef(null);
   const knownIdsRef = useRef(new Set());
+
+  const toggleSound = useCallback((val) => {
+    const next = typeof val === 'boolean' ? val : !soundEnabled;
+    setSoundEnabled(next);
+    saveSoundPref(next);
+  }, [soundEnabled]);
 
   const notifyNewOrders = useCallback((nextOrders) => {
     const newOrders = loaded ? nextOrders.filter(o => !knownIdsRef.current.has(o.id)) : [];
@@ -25,20 +37,22 @@ export function useOrders() {
     if (!newOrders.length) return;
     const label = newOrders.length === 1 ? `Nuevo pedido ${newOrders[0].number}` : `${newOrders.length} pedidos nuevos`;
     showToast(`🔔 ${label}: revisar cocina.`);
-    try {
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = 880;
-      gain.gain.value = .08;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + .18);
-    } catch { }
+    if (soundEnabled) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 880;
+        gain.gain.value = .08;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + .18);
+      } catch { }
+    }
     document.title = `🔔 ${label} · Lobabi`;
     setTimeout(() => { document.title = 'Lobabi · Cantina'; }, 5000);
-  }, [loaded]);
+  }, [loaded, soundEnabled]);
 
   useEffect(() => {
     let cancel = false;
@@ -61,7 +75,7 @@ export function useOrders() {
           items: row.items, status: row.status, createdAt: row.created_at
         }));
         notifyNewOrders(mapped);
-        if (!cancel) setOrders(mapped);
+        if (!cancel) { setOrders(mapped); saveLocal(mapped); }
       }
 
       await refresh();
@@ -136,7 +150,16 @@ export function useOrders() {
     });
   }, []);
 
-  return { orders, addOrder, updateOrder, saveEditedOrder, deleteOrder };
+  const clearAllOrders = useCallback(async () => {
+    setOrders([]);
+    if (supabaseReady && supabaseRef.current) {
+      const { error } = await supabaseRef.current.from('orders').delete().neq('id', '');
+      if (error) { showToast(`Supabase: ${error.message}`); return; }
+    }
+    saveLocal([]);
+  }, []);
+
+  return { orders, addOrder, updateOrder, saveEditedOrder, deleteOrder, clearAllOrders, toggleSound, soundEnabled };
 }
 
 function showToast(message) {

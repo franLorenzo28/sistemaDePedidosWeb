@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import CompactOrder from '../components/CompactOrder.jsx';
-import { nextNumber, formatTime } from '../lib/utils.js';
+import { nextNumber, timeAgo } from '../lib/utils.js';
 import { showToast } from '../hooks/useOrders.js';
 
 const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo'];
@@ -18,10 +18,16 @@ const PIZZA_FLAVORS = [
   { value: 'Sin muzzarella', label: 'Sin muzzarella' },
 ];
 
-function ProductSection({ title, children, visible, onToggle }) {
+const TABS = [
+  { key: 'Panchos', icon: '🌭', label: 'Panchos' },
+  { key: 'Hamburguesas', icon: '🍔', label: 'Hamburguesas' },
+  { key: 'Pizzas', icon: '🍕', label: 'Pizzas' },
+];
+
+function ProductSection({ title, icon, children }) {
   return (
-    <div id={`${title}-section`} className="form-section product-section" style={{ display: visible ? '' : 'none' }}>
-      <h3>{title}</h3>
+    <div className="form-section product-section">
+      <h3>{icon} {title}</h3>
       {children}
     </div>
   );
@@ -43,8 +49,8 @@ function IngredientGrid({ id, ingredients, checked, onChange }) {
   );
 }
 
-export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete }) {
-  const [activeSection, setActiveSection] = useState(null);
+export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete, onClearAll }) {
+  const [activeTab, setActiveTab] = useState('Panchos');
   const [draft, setDraft] = useState([]);
   const [customer, setCustomer] = useState('');
   const [notes, setNotes] = useState('');
@@ -54,13 +60,8 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete 
   const listos = orders.filter(o => o.status === 'listo').sort((a, b) => Number(a.number) - Number(b.number));
   const entregados = orders.filter(o => o.status === 'entregado').sort((a, b) => Number(b.number) - Number(a.number)).slice(0, 10);
 
-  const toggleSection = (section) => {
-    setActiveSection(prev => prev === section ? null : section);
-  };
-
   const addDraftItem = (type, name, quantity, detail, pizzaStatus) => {
     setDraft(prev => [...prev, { type, name, quantity, detail, status: pizzaStatus || 'pendiente' }]);
-    setActiveSection(null);
     showToast(`${type} agregado.`);
   };
 
@@ -77,12 +78,28 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete 
     setDraft([]);
     setCustomer('');
     setNotes('');
-    setActiveSection(null);
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'Panchos': return <PanchoSection onAdd={addDraftItem} />;
+      case 'Hamburguesas': return <HamburguesaSection onAdd={addDraftItem} />;
+      case 'Pizzas': return <PizzaSection onAdd={addDraftItem} />;
+      default: return null;
+    }
   };
 
   return (
     <>
-      <PageHeader title="Nuevo pedido" subtitle="Cargá los detalles desde la notebook y cada sector recibirá solamente lo que le corresponde." />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1 }}>
+          <PageHeader title="Nuevo pedido" subtitle="Cargá los detalles y cada sector recibirá lo que le corresponde." />
+        </div>
+        <button className="btn btn-ghost" style={{ fontSize: '.72rem', padding: '4px 10px', whiteSpace: 'nowrap' }}
+          onClick={() => { if (confirm('¿Resetear todos los pedidos? Se perderán todos los datos.')) onClearAll(); }}>
+          🗑️ Resetear
+        </button>
+      </div>
       <div className="layout caja-layout">
         <form ref={formRef} className="card caja-form" onSubmit={handleSubmit}>
           <div className="form-section">
@@ -91,36 +108,40 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete 
             <input placeholder="Ej: mesa 4" value={customer} onChange={e => setCustomer(e.target.value)} />
           </div>
 
-          <div className="form-section product-adders">
-            <label className="field-label">Agregar productos</label>
-            <div className="adder-buttons">
-              <button type="button" className="btn btn-ghost adder-btn" onClick={() => toggleSection('Panchos')}>Panchos</button>
-              <button type="button" className="btn btn-ghost adder-btn" onClick={() => toggleSection('Hamburguesas')}>Hamburguesas</button>
-              <button type="button" className="btn btn-ghost adder-btn" onClick={() => toggleSection('Pizza')}>Pizzas</button>
-            </div>
+          <div className="product-tabs">
+            {TABS.map(tab => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
           </div>
 
-          {draft.length > 0 && (
-            <div className="form-section draft-section">
-              <label className="field-label">Resumen del pedido</label>
-              <div className="draft-list">
-                {draft.map((item, i) => (
-                  <div key={i} className="draft-line">
-                    <span className="draft-info">
-                      <span className="draft-type">{item.type}</span>
-                      <strong>{item.quantity}×</strong> {item.name}
-                      {item.detail && <span className="draft-detail"> · {item.detail}</span>}
-                    </span>
-                    <button type="button" className="draft-remove" onClick={() => setDraft(prev => prev.filter((_, j) => j !== i))}>✕</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {renderTabContent()}
 
-          <PanchoSection visible={activeSection === 'Panchos'} onAdd={addDraftItem} />
-          <HamburguesaSection visible={activeSection === 'Hamburguesas'} onAdd={addDraftItem} />
-          <PizzaSection visible={activeSection === 'Pizza'} onAdd={addDraftItem} />
+          <div className="product-adders">
+            {draft.length > 0 && (
+              <div className="draft-section">
+                <label className="field-label">Resumen del pedido</label>
+                <div className="draft-list">
+                  {draft.map((item, i) => (
+                    <div key={i} className="draft-line">
+                      <span className="draft-info">
+                        <span className="draft-type">{item.type}</span>
+                        <strong>{item.quantity}×</strong> {item.name}
+                        {item.detail && <span className="draft-detail"> · {item.detail}</span>}
+                      </span>
+                      <button type="button" className="draft-remove" onClick={() => setDraft(prev => prev.filter((_, j) => j !== i))}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="form-section">
             <label className="field-label">Notas generales</label>
@@ -159,7 +180,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete 
                     <div key={o.id} className="delivered-item">
                       <span className="delivered-number">#{o.number}</span>
                       <span className="delivered-customer">{o.customer || 'Sin nombre'}</span>
-                      <span className="delivered-time">{formatTime(o.createdAt)}</span>
+                      <span className="delivered-time">{timeAgo(o.createdAt)}</span>
                     </div>
                   ))}
                 </div>
@@ -174,7 +195,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete 
   );
 }
 
-function PanchoSection({ visible, onAdd }) {
+function PanchoSection({ onAdd }) {
   const [product, setProduct] = useState(PANCHO_OPTIONS[0]);
   const [qty, setQty] = useState(1);
   const [ingredients, setIngredients] = useState([]);
@@ -198,7 +219,7 @@ function PanchoSection({ visible, onAdd }) {
   };
 
   return (
-    <ProductSection title="Panchos" visible={visible}>
+    <ProductSection title="Panchos" icon="🌭">
       <div className="product-controls">
         <div>
           <label className="field-label">Producto</label>
@@ -221,7 +242,7 @@ function PanchoSection({ visible, onAdd }) {
   );
 }
 
-function HamburguesaSection({ visible, onAdd }) {
+function HamburguesaSection({ onAdd }) {
   const [product, setProduct] = useState(HAMBURGUESA_OPTIONS[0]);
   const [qty, setQty] = useState(1);
   const [ingredients, setIngredients] = useState([]);
@@ -245,7 +266,7 @@ function HamburguesaSection({ visible, onAdd }) {
   };
 
   return (
-    <ProductSection title="Hamburguesas" visible={visible}>
+    <ProductSection title="Hamburguesas" icon="🍔">
       <div className="product-controls">
         <div>
           <label className="field-label">Producto</label>
@@ -270,7 +291,7 @@ function HamburguesaSection({ visible, onAdd }) {
 
 const PIZZA_TYPE_OPTIONS = ['Porción', 'Pizza entera'];
 
-function PizzaSection({ visible, onAdd }) {
+function PizzaSection({ onAdd }) {
   const [type, setType] = useState(PIZZA_TYPE_OPTIONS[0]);
   const [flavors, setFlavors] = useState([]);
   const [qty, setQty] = useState(1);
@@ -309,7 +330,7 @@ function PizzaSection({ visible, onAdd }) {
   };
 
   return (
-    <ProductSection title="Pizza" visible={visible}>
+    <ProductSection title="Pizzas" icon="🍕">
       <div className="product-controls">
         <div>
           <label className="field-label">Tipo</label>

@@ -1,29 +1,33 @@
-import { formatTime, statusLabel } from '../lib/utils.js';
+import { timeAgo, statusLabel, STATION_ICONS } from '../lib/utils.js';
+import { useState } from 'react';
 
 export default function CompactOrder({ order, showEdit, onEdit, onAction, onDelete }) {
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   return (
     <div className="compact-order">
       <div className="compact-head">
         <span className="compact-number">#{order.number}</span>
-        <span className="compact-time">{formatTime(order.createdAt)}</span>
+        <span className="compact-time">{timeAgo(order.createdAt)}</span>
         <span className={`badge ${order.status}`}>{statusLabel(order.status)}</span>
         {order.customer && <span className="compact-customer">{order.customer}</span>}
       </div>
       <div className="compact-items">
-        {order.items.map((item, i) => (
-          <div key={i} className="compact-item">
-            <span className="compact-qty">{item.quantity}×</span>
-            <span className="compact-name">{item.name}</span>
-            {item.detail && <span className="compact-detail">{item.detail}</span>}
-          </div>
-        ))}
+        {order.items.map((item, i) => {
+          const icon = item.station && STATION_ICONS[item.station] ? STATION_ICONS[item.station] : '';
+          return (
+            <div key={i} className="compact-item">
+              {icon && <span className="compact-item-icon">{icon}</span>}
+              <span className="compact-qty">{item.quantity}×</span>
+              <span className="compact-name">{item.name}</span>
+              {item.detail && <span className="compact-detail">{item.detail}</span>}
+            </div>
+          );
+        })}
       </div>
       {order.notes && <div className="compact-note">Nota: {order.notes}</div>}
       <div className="compact-actions">
         {showEdit && (
-          <button className="icon-btn icon-edit" title="Editar" onClick={() => onEdit(order.id)}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-          </button>
+          <button className="btn btn-ghost compact-action-btn" onClick={() => onEdit(order.id)}>✏️ Editar</button>
         )}
         {order.status === 'listo' && (
           <button className="btn btn-primary compact-action-btn" onClick={() => onAction(order.id, 'entregado', null)}>
@@ -31,9 +35,22 @@ export default function CompactOrder({ order, showEdit, onEdit, onAction, onDele
           </button>
         )}
         {onDelete && (
-          <button className="icon-btn icon-delete" title="Eliminar" onClick={() => { if (confirm('¿Eliminar este pedido?')) onDelete(order.id); }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-          </button>
+          <>
+            {deleteConfirm ? (
+              <div className="delete-confirm">
+                <button className="btn btn-danger compact-action-btn" onClick={() => { onDelete(order.id); setDeleteConfirm(false); }}>
+                  Sí, eliminar
+                </button>
+                <button className="btn btn-ghost compact-action-btn" onClick={() => setDeleteConfirm(false)}>
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <button className="btn btn-ghost compact-action-btn compact-delete-btn" onClick={() => setDeleteConfirm(true)}>
+                🗑️ Eliminar
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
