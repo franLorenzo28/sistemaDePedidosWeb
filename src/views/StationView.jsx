@@ -33,7 +33,7 @@ export default function StationView({ station, orders, onUpdate }) {
             .sort((a, b) => Number(a.number) - Number(b.number));
           return (
             <div key={s.key} className="station-section">
-              <div className="station-section-header" style={{ borderLeftColor: s.border, background: s.bg }}>
+              <div className="station-section-header" style={{ background: s.bg, color: s.color }}>
                 <h2>{s.label} <span className="section-count" style={{ color: s.color }}>{sorted.length}</span></h2>
               </div>
               <div className="order-list">

@@ -4,10 +4,10 @@ import CompactOrder from '../components/CompactOrder.jsx';
 import { nextNumber, timeAgo } from '../lib/utils.js';
 import { showToast } from '../hooks/useOrders.js';
 
-const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo'];
-const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa completa', 'Hamburguesa veggie'];
-const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Sin gustos'];
-const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup', 'Sin gustos'];
+const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo', 'Doble pancho', 'Pancho con queso'];
+const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa con queso', 'Hamburguesa completa', 'Hamburguesa doble carne', 'Hamburguesa veggie'];
+const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Salsa criolla', 'Sin gustos'];
+const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Queso', 'Huevo', 'Jamón', 'Mayonesa', 'Ketchup', 'Mostaza', 'Sin gustos'];
 const PIZZA_FLAVORS = [
   { value: 'Caprese', label: 'Caprese', sub: 'albahaca y tomate' },
   { value: 'Panceta', label: 'Panceta' },
@@ -34,15 +34,31 @@ function ProductSection({ title, icon, children }) {
 }
 
 function IngredientGrid({ id, ingredients, checked, onChange }) {
+  const handleToggle = (ing) => {
+    if (ing === 'Sin gustos') {
+      if (checked.includes('Sin gustos')) {
+        onChange([]);
+      } else {
+        onChange(['Sin gustos']);
+      }
+    } else {
+      const cleanChecked = checked.filter(v => v !== 'Sin gustos');
+      if (checked.includes(ing)) {
+        onChange(cleanChecked.filter(v => v !== ing));
+      } else {
+        onChange([...cleanChecked, ing]);
+      }
+    }
+  };
+
   return (
     <div className="ingredient-grid">
       {ingredients.map(ing => (
         <div key={ing} className="choice">
-          <input id={`${id}-${ing}`} type="checkbox" value={ing} checked={checked.includes(ing)} onChange={e => {
-            if (e.target.checked) onChange([...checked, ing]);
-            else onChange(checked.filter(v => v !== ing));
-          }} />
-          <label htmlFor={`${id}-${ing}`}>{ing}</label>
+          <input id={`${id}-${ing}`} type="checkbox" value={ing} checked={checked.includes(ing)} onChange={() => handleToggle(ing)} />
+          <label htmlFor={`${id}-${ing}`} className="pizza-flavor-label">
+            <span>{ing}</span>
+          </label>
         </div>
       ))}
     </div>
@@ -105,16 +121,16 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
           <div className="form-section">
             <h2>Pedido {nextNumber(orders)}</h2>
             <label className="field-label">Nombre o referencia (opcional)</label>
-            <input placeholder="Ej: mesa 4" value={customer} onChange={e => setCustomer(e.target.value)} />
+            <input placeholder="Nombre..." value={customer} onChange={e => setCustomer(e.target.value)} />
           </div>
 
           <div className="product-tabs">
             {TABS.map(tab => (
               <button
                 key={tab.key}
-                type="button"
-                className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.key)}
+                  type="button"
+                  className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
+                  onClick={() => setActiveTab(prev => prev === tab.key ? null : tab.key)}
               >
                 {tab.icon} {tab.label}
               </button>
@@ -178,8 +194,8 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
                 <div className="delivered-list">
                   {entregados.map(o => (
                     <div key={o.id} className="delivered-item">
-                      <span className="delivered-number">#{o.number}</span>
-                      <span className="delivered-customer">{o.customer || 'Sin nombre'}</span>
+                      <span className="delivered-number">Pedido #{o.number}</span>
+                      <span className="delivered-customer">{o.customer ? `Referencia: ${o.customer}` : 'Sin nombre'}</span>
                       <span className="delivered-time">{timeAgo(o.createdAt)}</span>
                     </div>
                   ))}
@@ -204,7 +220,7 @@ function PanchoSection({ onAdd }) {
   const handleProductChange = (val) => {
     setProduct(val);
     if (val.toLowerCase().includes('completo')) {
-      setIngredients(PANCHO_INGREDIENTS.filter(i => i !== 'Sin gustos'));
+      setIngredients(PANCHO_INGREDIENTS.filter(i => i !== 'Sin gustos' && i !== 'Salsa criolla'));
     } else {
       setIngredients([]);
     }
@@ -232,9 +248,9 @@ function PanchoSection({ onAdd }) {
           <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
         </div>
         <div className="detail-control">
-          <label className="field-label">Sabores</label>
+          <label className="field-label">Gustos / Aderezos</label>
           <IngredientGrid id="pancho" ingredients={PANCHO_INGREDIENTS} checked={ingredients} onChange={setIngredients} />
-          <input placeholder="Detalle extra" value={extra} onChange={e => setExtra(e.target.value)} />
+          <input placeholder="Detalle extra (ej: poca mayonesa)" value={extra} onChange={e => setExtra(e.target.value)} />
         </div>
       </div>
       <button type="button" className="btn btn-ghost full" onClick={handleAdd}>+ Agregar panchos</button>
@@ -251,7 +267,9 @@ function HamburguesaSection({ onAdd }) {
   const handleProductChange = (val) => {
     setProduct(val);
     if (val.toLowerCase().includes('completa')) {
-      setIngredients(HAMBURGUESA_INGREDIENTS.filter(i => i !== 'Sin gustos'));
+      setIngredients(HAMBURGUESA_INGREDIENTS.filter(i => ['Tomate', 'Lechuga', 'Queso', 'Mayonesa', 'Ketchup'].includes(i)));
+    } else if (val.toLowerCase().includes('queso')) {
+      setIngredients(['Queso']);
     } else {
       setIngredients([]);
     }
@@ -279,9 +297,9 @@ function HamburguesaSection({ onAdd }) {
           <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
         </div>
         <div className="detail-control">
-          <label className="field-label">Sabores</label>
+          <label className="field-label">Gustos / Aderezos</label>
           <IngredientGrid id="ham" ingredients={HAMBURGUESA_INGREDIENTS} checked={ingredients} onChange={setIngredients} />
-          <input placeholder="Detalle extra" value={extra} onChange={e => setExtra(e.target.value)} />
+          <input placeholder="Detalle extra (ej: bien cocida)" value={extra} onChange={e => setExtra(e.target.value)} />
         </div>
       </div>
       <button type="button" className="btn btn-ghost full" onClick={handleAdd}>+ Agregar hamburguesas</button>
