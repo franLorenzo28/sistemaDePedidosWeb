@@ -14,7 +14,7 @@ export default function EntregaView({ orders, onUpdate }) {
     <>
       <PageHeader title="Entrega" subtitle="Acá aparecen los pedidos completos que cocina marcó como listos." />
       <div className="stats">
-        <div className="stat"><strong>{ready.length}</strong><span>para entregar</span></div>
+        <div className="stat"><strong>{ready.length}</strong><span>Para entregar</span></div>
       </div>
       <div>
         <h2>Pedidos listos</h2>

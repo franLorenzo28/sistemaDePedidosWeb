@@ -123,7 +123,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
 
         <section className="caja-sidebar">
           <div className="caja-sidebar-cols">
-            <div className="caja-sidebar-left">
+            <div className="sidebar-col">
               <h2>Pedidos listos</h2>
               <div className="compact-list">
                 {listos.length
@@ -131,22 +131,9 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
                   : <div className="empty">No hay pedidos listos.</div>
                 }
               </div>
-              {entregados.length > 0 && (
-                <div className="delivered-section">
-                  <h3>Entregados</h3>
-                  <div className="delivered-list">
-                    {entregados.map(o => (
-                      <div key={o.id} className="delivered-item">
-                        <span className="delivered-number">#{o.number}</span>
-                        <span className="delivered-customer">{o.customer || 'Sin nombre'}</span>
-                        <span className="delivered-time">{formatTime(o.createdAt)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-            <div className="caja-sidebar-right">
+            <div className="sidebar-sep" />
+            <div className="sidebar-col">
               <h2>Pedidos en cocina</h2>
               <div className="compact-list">
                 {cooking.length
@@ -154,6 +141,23 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
                   : <div className="empty">No hay pedidos en cocina.</div>
                 }
               </div>
+            </div>
+            <div className="sidebar-sep" />
+            <div className="sidebar-col">
+              <h2>Entregados</h2>
+              {entregados.length > 0 ? (
+                <div className="delivered-list">
+                  {entregados.map(o => (
+                    <div key={o.id} className="delivered-item">
+                      <span className="delivered-number">#{o.number}</span>
+                      <span className="delivered-customer">{o.customer || 'Sin nombre'}</span>
+                      <span className="delivered-time">{formatTime(o.createdAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty">No hay entregados.</div>
+              )}
             </div>
           </div>
         </section>
