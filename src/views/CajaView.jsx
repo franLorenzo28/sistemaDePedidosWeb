@@ -4,17 +4,17 @@ import CompactOrder from '../components/CompactOrder.jsx';
 import { nextNumber, formatTime } from '../lib/utils.js';
 import { showToast } from '../hooks/useOrders.js';
 
-const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho especial'];
+const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo'];
 const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa completa', 'Hamburguesa veggie'];
-const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Sin nada'];
-const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup', 'Sin nada'];
+const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Sin gustos'];
+const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup', 'Sin gustos'];
 const PIZZA_FLAVORS = [
   { value: 'Caprese', label: 'Caprese', sub: 'albahaca y tomate' },
   { value: 'Panceta', label: 'Panceta' },
   { value: 'Huevo', label: 'Huevo' },
   { value: 'Aceitunas', label: 'Aceitunas' },
   { value: 'Peperoni', label: 'Peperoni' },
-  { value: 'Sin nada', label: 'Sin nada' },
+  { value: 'Sin gustos', label: 'Sin gustos' },
   { value: 'Sin muzzarella', label: 'Sin muzzarella' },
 ];
 
@@ -98,21 +98,29 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
               <button type="button" className="btn btn-ghost adder-btn" onClick={() => toggleSection('Hamburguesas')}>Hamburguesas</button>
               <button type="button" className="btn btn-ghost adder-btn" onClick={() => toggleSection('Pizza')}>Pizzas</button>
             </div>
-            {draft.length > 0 && (
-              <div className="draft-lines">
-                {draft.map((item, i) => (
-                  <div key={i} className="draft-line">
-                    <span className="draft-type">{item.type}</span> {item.quantity}× {item.name}
-                    {item.detail && <small> · {item.detail}</small>}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <PanchoSection visible={activeSection === 'Panchos'} onAdd={addDraftItem} />
           <HamburguesaSection visible={activeSection === 'Hamburguesas'} onAdd={addDraftItem} />
           <PizzaSection visible={activeSection === 'Pizza'} onAdd={addDraftItem} />
+
+          {draft.length > 0 && (
+            <div className="form-section draft-section">
+              <label className="field-label">Resumen del pedido</label>
+              <div className="draft-list">
+                {draft.map((item, i) => (
+                  <div key={i} className="draft-line">
+                    <span className="draft-info">
+                      <span className="draft-type">{item.type}</span>
+                      <strong>{item.quantity}×</strong> {item.name}
+                      {item.detail && <span className="draft-detail"> · {item.detail}</span>}
+                    </span>
+                    <button type="button" className="draft-remove" onClick={() => setDraft(prev => prev.filter((_, j) => j !== i))}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="form-section">
             <label className="field-label">Notas generales</label>
@@ -172,6 +180,15 @@ function PanchoSection({ visible, onAdd }) {
   const [ingredients, setIngredients] = useState([]);
   const [extra, setExtra] = useState('');
 
+  const handleProductChange = (val) => {
+    setProduct(val);
+    if (val.toLowerCase().includes('completo')) {
+      setIngredients(PANCHO_INGREDIENTS.filter(i => i !== 'Sin gustos'));
+    } else {
+      setIngredients([]);
+    }
+  };
+
   const handleAdd = () => {
     const detail = [...ingredients, extra.trim()].filter(Boolean).join(', ');
     onAdd('Panchos', product, qty, detail);
@@ -185,7 +202,7 @@ function PanchoSection({ visible, onAdd }) {
       <div className="product-controls">
         <div>
           <label className="field-label">Producto</label>
-          <select value={product} onChange={e => setProduct(e.target.value)}>
+          <select value={product} onChange={e => handleProductChange(e.target.value)}>
             {PANCHO_OPTIONS.map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
@@ -194,7 +211,7 @@ function PanchoSection({ visible, onAdd }) {
           <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
         </div>
         <div className="detail-control">
-          <label className="field-label">Detalles</label>
+          <label className="field-label">Sabores</label>
           <IngredientGrid id="pancho" ingredients={PANCHO_INGREDIENTS} checked={ingredients} onChange={setIngredients} />
           <input placeholder="Detalle extra" value={extra} onChange={e => setExtra(e.target.value)} />
         </div>
@@ -213,7 +230,7 @@ function HamburguesaSection({ visible, onAdd }) {
   const handleProductChange = (val) => {
     setProduct(val);
     if (val.toLowerCase().includes('completa')) {
-      setIngredients(HAMBURGUESA_INGREDIENTS.filter(i => i !== 'Sin nada'));
+      setIngredients(HAMBURGUESA_INGREDIENTS.filter(i => i !== 'Sin gustos'));
     } else {
       setIngredients([]);
     }
@@ -241,7 +258,7 @@ function HamburguesaSection({ visible, onAdd }) {
           <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
         </div>
         <div className="detail-control">
-          <label className="field-label">Detalles</label>
+          <label className="field-label">Sabores</label>
           <IngredientGrid id="ham" ingredients={HAMBURGUESA_INGREDIENTS} checked={ingredients} onChange={setIngredients} />
           <input placeholder="Detalle extra" value={extra} onChange={e => setExtra(e.target.value)} />
         </div>
@@ -251,7 +268,10 @@ function HamburguesaSection({ visible, onAdd }) {
   );
 }
 
+const PIZZA_TYPE_OPTIONS = ['Porción', 'Pizza entera'];
+
 function PizzaSection({ visible, onAdd }) {
+  const [type, setType] = useState(PIZZA_TYPE_OPTIONS[0]);
   const [flavors, setFlavors] = useState([]);
   const [qty, setQty] = useState(1);
   const [extra, setExtra] = useState('');
@@ -261,7 +281,7 @@ function PizzaSection({ visible, onAdd }) {
       const next = prev.includes(val) ? prev.filter(f => f !== val) : [...prev, val];
       const baseFlavors = next.filter(f => f !== 'Sin muzzarella');
       const allowedMix = baseFlavors.length === 2 && baseFlavors.every(f => ['Panceta', 'Huevo'].includes(f));
-      if (baseFlavors.includes('Sin nada') && next.length > 1) {
+      if (baseFlavors.includes('Sin gustos') && next.length > 1) {
         showToast('Elegí un solo sabor, o combiná Panceta + Huevo.');
         return prev;
       }
@@ -281,7 +301,8 @@ function PizzaSection({ visible, onAdd }) {
       flavors.includes('Sin muzzarella') ? 'Sin muzzarella' : '',
       extra.trim()
     ].filter(Boolean).join(', ');
-    onAdd('Pizzas', `Pizza ${baseFlavors.join(' y ')}`, qty, detail, 'pendiente');
+    const prefix = type === 'Porción' ? 'Porción' : 'Pizza';
+    onAdd('Pizzas', `${prefix} ${baseFlavors.join(' y ')}`, qty, detail, 'pendiente');
     setFlavors([]);
     setExtra('');
     setQty(1);
@@ -290,7 +311,13 @@ function PizzaSection({ visible, onAdd }) {
   return (
     <ProductSection title="Pizza" visible={visible}>
       <div className="product-controls">
-        <div className="pizza-flavor-grid">
+        <div>
+          <label className="field-label">Tipo</label>
+          <select value={type} onChange={e => setType(e.target.value)}>
+            {PIZZA_TYPE_OPTIONS.map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
           <label className="field-label">Sabores</label>
           <div className="choice-grid">
             {PIZZA_FLAVORS.map(f => (
@@ -304,15 +331,13 @@ function PizzaSection({ visible, onAdd }) {
             ))}
           </div>
         </div>
-        <div className="pizza-controls-row">
-          <div className="quantity-control">
-            <label className="field-label">Cant.</label>
-            <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
-          </div>
-          <div className="detail-control">
-            <label className="field-label">Detalles</label>
-            <input placeholder="Ej: bien cocida" value={extra} onChange={e => setExtra(e.target.value)} />
-          </div>
+        <div className="quantity-control">
+          <label className="field-label">Cant.</label>
+          <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
+        </div>
+        <div className="detail-control">
+          <label className="field-label">Detalles</label>
+          <input placeholder="Ej: bien cocida" value={extra} onChange={e => setExtra(e.target.value)} />
         </div>
       </div>
       <button type="button" className="btn btn-ghost full" onClick={handleAdd}>+ Agregar pizza</button>
