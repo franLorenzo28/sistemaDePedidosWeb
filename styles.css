@@ -100,6 +100,9 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .form-section:first-child { padding-bottom: 14px; }
 .caja-form .form-section h3 { margin-bottom: 10px; font-size: 1.05rem; }
 .caja-form .form-section:first-child h2 { margin-bottom: 8px; font-size: 1.3rem; }
+.caja-form .product-adders,
+.caja-form .draft-section,
+.caja-form .product-section { grid-column: 1 / -1; }
 .caja-form .field-label { margin: 12px 0 7px; font-size: .9rem; }
 .caja-form input, .caja-form select { padding: 12px 14px; min-height: 48px; }
 .caja-form textarea { min-height: 72px; }
@@ -108,9 +111,6 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .choice label { min-height: 48px; padding: 10px; font-size: .85rem; }
 .caja-form .btn { min-height: 52px; padding: 14px 18px; font-size: .94rem; }
 .caja-form .item-line { padding: 6px 0; font-size: .86rem; }
-.caja-form > .form-section:nth-child(2),
-.caja-form > .form-section:nth-child(3),
-.caja-form > .form-section:nth-child(4) { grid-column: span 1; }
 .caja-form .product-controls { display: grid; grid-template-columns: minmax(0, 1fr) 68px; gap: 0 8px; }
 .caja-form .product-controls > div:first-child,
 .caja-form .product-controls .detail-control { grid-column: 1 / -1; }
