@@ -123,21 +123,25 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .product-controls input,
 .caja-form .product-controls select { min-height: 40px; padding: 8px 10px; font-size: .82rem; }
 .caja-form .product-section > .btn { margin-top: 7px; }
-.caja-form .pizza-section .quantity-row { grid-template-columns: 1fr 54px; align-items: start; }
-.caja-form .pizza-section .choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-.caja-form .pizza-section .choice label { min-height: 40px; padding: 8px 7px; font-size: .76rem; text-align: center; }
-.caja-form .pizza-section .choice label small { font-size: .66rem; }
-.caja-form .pizza-section .quantity-row { display: block; }
-.caja-form .pizza-section > .field-label { display: none; }
-.caja-form .pizza-section .pizza-quantity-control { display: flex; flex-direction: column; gap: 2px; width: 92px; margin-top: 9px; }
-.caja-form .pizza-section .pizza-detail-control { margin-top: 9px; }
-.caja-form .pizza-section > .btn { margin-top: 7px; }
-.caja-layout > section { max-height: 600px; overflow-y: auto; }
-.caja-layout > section .order-card { padding: 12px; border-left-width: 4px; }
-.caja-layout > section .order-number { font-size: 1.05rem; }
-.caja-layout > section .item-line { padding: 5px 0; font-size: .8rem; }
-.caja-layout > section .item-detail { font-size: .78rem; }
-.caja-layout > section .order-actions .btn { min-height: 38px; padding: 7px 10px; font-size: .78rem; }
+.caja-layout > section { max-height: none; }
+.compact-order { padding: 6px 10px; }
+.caja-sidebar { overflow-y: auto; max-height: 600px; }
+.caja-sidebar h2 { margin: 0 0 8px; font-size: .95rem; }
+.caja-sidebar-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.caja-sidebar-left, .caja-sidebar-right { min-width: 0; }
+.compact-list { display: grid; gap: 4px; margin-bottom: 14px; }
+.compact-order { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; padding: 8px 12px; background: white; border: 1px solid var(--line); border-radius: 10px; font-size: .82rem; align-items: center; }
+.compact-number { font-weight: 900; color: var(--green-700); white-space: nowrap; }
+.compact-items { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compact-customer { color: var(--muted); font-size: .75rem; white-space: nowrap; }
+.product-adders { margin-bottom: 4px; }
+.adder-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.adder-btn { flex: 1; min-width: 100px; padding: 12px 14px; border: 2px dashed var(--line); background: white; border-radius: 12px; font-weight: 900; font-size: .92rem; color: var(--green-700); transition: border-color .15s, background .15s; }
+.adder-btn:hover { border-color: var(--green-700); background: var(--green-100); }
+.product-section { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px !important; background: #f8fafc; margin-top: 6px; }
+.product-section h3 { margin: 0 0 10px; }
+.pizza-controls-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; margin-top: 10px; }
+.pizza-controls-row .quantity-control { max-width: 80px; }
 .delivered-section { margin-top: 16px; }
 .delivered-section h3 { margin: 0 0 8px; font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .delivered-list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: white; }
@@ -187,12 +191,17 @@ textarea { min-height: 64px; resize: vertical; }
   .layout { grid-template-columns: 1fr; gap: 18px; }
   .caja-layout { grid-template-columns: 1fr; }
   .caja-layout > section { max-height: none; }
+  .caja-sidebar { max-height: none; }
+  .caja-sidebar-cols { grid-template-columns: 1fr; }
   .caja-form { display: block; }
   .caja-form .product-controls input,
   .caja-form .product-controls select { min-height: 46px; padding: 11px 12px; font-size: 16px; }
-  .caja-form .pizza-section .choice-grid { grid-template-columns: 1fr 1fr; }
-  .caja-form .pizza-section .choice label { min-height: 54px; padding: 11px 9px; font-size: .86rem; text-align: left; }
-  .caja-form .pizza-section .choice label small { font-size: .75rem; }
+  .adder-buttons { flex-direction: column; }
+  .adder-btn { min-height: 50px; font-size: 1rem; }
+  .pizza-controls-row { grid-template-columns: 1fr; }
+  .pizza-controls-row .quantity-control { max-width: none; }
+  .product-section .choice-grid { grid-template-columns: 1fr 1fr; }
+  .product-section .choice label { min-height: 44px; padding: 9px; font-size: .82rem; }
   .card { padding: 16px; border-radius: 16px; }
   .form-section { padding: 13px 0; }
   input, textarea, select { min-height: 46px; padding: 11px 12px; font-size: 16px; }
