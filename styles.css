@@ -90,8 +90,8 @@ textarea { min-height: 64px; resize: vertical; }
 .edit-remove input { width: auto; min-height: auto; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
 .modal-actions .btn { min-width: 130px; }
-.caja-layout { grid-template-columns: 1fr 1.4fr; gap: 32px; }
-.caja-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: max-content; align-items: start; gap: 0 24px; padding: 28px 30px; }
+.caja-layout { grid-template-columns: 1fr 1.5fr; gap: 36px; }
+.caja-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: max-content; align-items: start; gap: 0 28px; padding: 32px 34px; }
 .caja-form > .form-section:first-child,
 .caja-form > .form-section:nth-last-of-type(1),
 .caja-form > .btn { grid-column: 1 / -1; }
@@ -99,13 +99,13 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .form-section { padding: 12px 0; }
 .caja-form .form-section:first-child { padding-bottom: 10px; }
 .caja-form .form-section h3 { margin-bottom: 10px; font-size: 1.05rem; }
-.caja-form .field-label { margin: 11px 0 6px; font-size: .88rem; }
-.caja-form input, .caja-form select { padding: 11px 13px; min-height: 46px; }
-.caja-form textarea { min-height: 68px; }
+.caja-form .field-label { margin: 12px 0 7px; font-size: .9rem; }
+.caja-form input, .caja-form select { padding: 12px 14px; min-height: 48px; }
+.caja-form textarea { min-height: 72px; }
 .caja-form .quantity-row { grid-template-columns: 1fr 70px; gap: 8px; }
 .caja-form .choice-grid { gap: 6px; }
 .caja-form .choice label { min-height: 48px; padding: 10px; font-size: .85rem; }
-.caja-form .btn { min-height: 50px; padding: 13px 16px; font-size: .92rem; }
+.caja-form .btn { min-height: 52px; padding: 14px 18px; font-size: .94rem; }
 .caja-form .item-line { padding: 6px 0; font-size: .86rem; }
 .caja-form > .form-section:nth-child(2),
 .caja-form > .form-section:nth-child(3),
@@ -128,8 +128,8 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-sidebar { overflow-y: auto; max-height: none; }
 .caja-sidebar h2 { margin: 0 0 10px; font-size: 1.05rem; }
 .caja-sidebar-cols { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; align-items: start; }
-.sidebar-col { min-width: 0; padding: 0 18px; }
-.sidebar-col:first-child { padding-left: 0; }
+.sidebar-col { min-width: 0; padding: 0 22px; }
+.sidebar-col:first-child { padding-left: 8px; }
 .sidebar-col:last-child { padding-right: 0; }
 .sidebar-sep { width: 1px; align-self: stretch; background: var(--line); margin: 4px 0; }
 .compact-list { display: grid; gap: 6px; margin-bottom: 14px; }
