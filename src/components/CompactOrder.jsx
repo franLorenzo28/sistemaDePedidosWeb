@@ -27,7 +27,7 @@ export default function CompactOrder({ order, showEdit, onEdit, onAction, onDele
         )}
         {order.status === 'listo' && (
           <button className="btn btn-primary compact-action-btn" onClick={() => onAction(order.id, 'entregado', null)}>
-            Marcar entregado
+            Entregado
           </button>
         )}
         {onDelete && (
