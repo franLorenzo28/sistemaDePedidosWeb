@@ -43,7 +43,7 @@ function IngredientGrid({ id, ingredients, checked, onChange }) {
   );
 }
 
-export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
+export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete }) {
   const [activeSection, setActiveSection] = useState(null);
   const [draft, setDraft] = useState([]);
   const [customer, setCustomer] = useState('');
@@ -132,21 +132,21 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate }) {
         <section className="caja-sidebar">
           <div className="caja-sidebar-cols">
             <div className="sidebar-col">
-              <h2>Pedidos listos</h2>
+              <h2>En preparación</h2>
               <div className="compact-list">
-                {listos.length
-                  ? listos.map(o => <CompactOrder key={o.id} order={o} showEdit={false} onEdit={onEdit} onAction={onUpdate} />)
-                  : <div className="empty">No hay pedidos listos.</div>
+                {cooking.length
+                  ? cooking.map(o => <CompactOrder key={o.id} order={o} showEdit={true} onEdit={onEdit} onAction={onUpdate} onDelete={onDelete} />)
+                  : <div className="empty">No hay pedidos en cocina.</div>
                 }
               </div>
             </div>
             <div className="sidebar-sep" />
             <div className="sidebar-col">
-              <h2>Pedidos en cocina</h2>
+              <h2>A entregar</h2>
               <div className="compact-list">
-                {cooking.length
-                  ? cooking.map(o => <CompactOrder key={o.id} order={o} showEdit={true} onEdit={onEdit} onAction={onUpdate} />)
-                  : <div className="empty">No hay pedidos en cocina.</div>
+                {listos.length
+                  ? listos.map(o => <CompactOrder key={o.id} order={o} showEdit={false} onEdit={onEdit} onAction={onUpdate} onDelete={onDelete} />)
+                  : <div className="empty">No hay pedidos listos.</div>
                 }
               </div>
             </div>

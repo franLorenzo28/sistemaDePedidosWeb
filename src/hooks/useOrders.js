@@ -124,7 +124,19 @@ export function useOrders() {
     });
   }, []);
 
-  return { orders, addOrder, updateOrder, saveEditedOrder };
+  const deleteOrder = useCallback(async (id) => {
+    setOrders(prev => {
+      const next = prev.filter(o => o.id !== id);
+      if (!supabaseReady) { saveLocal(next); return next; }
+      supabaseRef.current.from('orders')
+        .delete()
+        .eq('id', id)
+        .then(({ error }) => { if (error) showToast(`Supabase: ${error.message}`); });
+      return next;
+    });
+  }, []);
+
+  return { orders, addOrder, updateOrder, saveEditedOrder, deleteOrder };
 }
 
 function showToast(message) {

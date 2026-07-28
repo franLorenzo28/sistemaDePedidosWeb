@@ -3,7 +3,7 @@ import OrderCard from '../components/OrderCard.jsx';
 import { STATION_LABELS, stationStatus } from '../lib/utils.js';
 import { showToast } from '../hooks/useOrders.js';
 
-export default function StationView({ station, orders, onUpdate }) {
+export default function StationView({ station, orders, onUpdate, onDelete }) {
   const active = orders.filter(o => o.status !== 'entregado' && o.items.some(item => item.station === station));
   const pending = active.filter(o => stationStatus(o, station) === 'pendiente');
   const preparing = active.filter(o => stationStatus(o, station) === 'preparando');
@@ -26,15 +26,15 @@ export default function StationView({ station, orders, onUpdate }) {
         <div className="station-stat ready"><strong>{ready.length}</strong><span>listos</span></div>
       </div>
       <div className="station-queue">
-        <OrderList title="Siguiente en cola" orders={pending} station={station} onAction={handleAction} />
-        <OrderList title="En preparación" orders={preparing} station={station} onAction={handleAction} />
-        <OrderList title="Listos · esperando entrega" orders={ready} station={station} onAction={handleAction} />
+        <OrderList title="Siguiente en cola" orders={pending} station={station} onAction={handleAction} onDelete={onDelete} />
+        <OrderList title="En preparación" orders={preparing} station={station} onAction={handleAction} onDelete={onDelete} />
+        <OrderList title="Listos · esperando entrega" orders={ready} station={station} onAction={handleAction} onDelete={onDelete} />
       </div>
     </>
   );
 }
 
-function OrderList({ title, orders, station, onAction }) {
+function OrderList({ title, orders, station, onAction, onDelete }) {
   const sorted = orders
     .filter(o => o.items.some(item => item.station === station))
     .sort((a, b) => Number(a.number) - Number(b.number));
@@ -43,7 +43,7 @@ function OrderList({ title, orders, station, onAction }) {
       <h2>{title}</h2>
       <div className="order-list">
         {sorted.length
-          ? sorted.map(o => <OrderCard key={o.id} order={o} station={station} onAction={onAction} />)
+          ? sorted.map(o => <OrderCard key={o.id} order={o} station={station} onAction={onAction} onDelete={onDelete} />)
           : <div className="empty">No hay pedidos para mostrar.</div>
         }
       </div>

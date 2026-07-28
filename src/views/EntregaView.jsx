@@ -2,7 +2,7 @@ import PageHeader from '../components/PageHeader.jsx';
 import OrderCard from '../components/OrderCard.jsx';
 import { showToast } from '../hooks/useOrders.js';
 
-export default function EntregaView({ orders, onUpdate }) {
+export default function EntregaView({ orders, onUpdate, onDelete }) {
   const ready = orders.filter(o => o.status === 'listo');
 
   const handleAction = async (id, action) => {
@@ -22,7 +22,7 @@ export default function EntregaView({ orders, onUpdate }) {
           {ready.length
             ? ready
                 .sort((a, b) => Number(a.number) - Number(b.number))
-                .map(o => <OrderCard key={o.id} order={o} station={null} onAction={handleAction} />)
+                .map(o => <OrderCard key={o.id} order={o} station={null} onAction={handleAction} onDelete={onDelete} />)
             : <div className="empty">No hay pedidos para mostrar.</div>
           }
         </div>

@@ -1,6 +1,6 @@
 import { formatTime, statusLabel, relevantItems, stationStatus } from '../lib/utils.js';
 
-export default function OrderCard({ order, station, onAction }) {
+export default function OrderCard({ order, station, onAction, onDelete }) {
   const items = relevantItems(order, station);
   const currentStatus = station
     ? items.every(item => (item.status || order.status) === 'listo') ? 'listo'
@@ -37,6 +37,11 @@ export default function OrderCard({ order, station, onAction }) {
             onClick={() => onAction(order.id, next, station || null)}
           >
             {next === 'entregado' ? 'Marcar entregado' : next === 'preparando' ? 'Empezar' : 'Marcar listo'}
+          </button>
+        )}
+        {onDelete && (
+          <button className="btn btn-danger" onClick={() => { if (confirm('¿Eliminar este pedido?')) onDelete(order.id); }}>
+            Eliminar
           </button>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { formatTime, statusLabel } from '../lib/utils.js';
 
-export default function CompactOrder({ order, showEdit, onEdit, onAction }) {
+export default function CompactOrder({ order, showEdit, onEdit, onAction, onDelete }) {
   return (
     <div className="compact-order">
       <div className="compact-head">
@@ -24,6 +24,11 @@ export default function CompactOrder({ order, showEdit, onEdit, onAction }) {
         {order.status === 'listo' && (
           <button className="btn btn-primary compact-action-btn" onClick={() => onAction(order.id, 'entregado', null)}>
             Marcar entregado
+          </button>
+        )}
+        {onDelete && (
+          <button className="btn btn-danger compact-delete-btn" onClick={() => { if (confirm('¿Eliminar este pedido?')) onDelete(order.id); }}>
+            Eliminar
           </button>
         )}
       </div>
