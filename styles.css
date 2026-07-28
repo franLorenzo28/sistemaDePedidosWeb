@@ -119,7 +119,8 @@ textarea { min-height: 64px; resize: vertical; }
 .caja-form .product-controls .ingredient-control { grid-column: 1 / -1; grid-row: 2; }
 .caja-form .ingredient-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .caja-form .ingredient-grid .choice label { min-height: 42px; padding: 9px 10px; font-size: .85rem; line-height: 1.2; text-align: center; font-weight: 700; }
-.caja-form .ingredient-grid .choice label small { display: block; margin-top: 2px; font-size: .75rem; line-height: 1.2; font-weight: 700; color: var(--muted); }
+.caja-form .ingredient-grid .choice .pizza-flavor-label { display: flex; flex-direction: column; justify-content: center; }
+.caja-form .ingredient-grid .choice .pizza-flavor-sub { margin-top: 2px; font-size: inherit; line-height: inherit; font-weight: inherit; color: inherit; }
 .caja-form .product-controls .field-label { white-space: nowrap; margin: 0 0 3px; font-size: .84rem; }
 .caja-form .product-controls input,
 .caja-form .product-controls select { min-height: 44px; padding: 9px 12px; font-size: .9rem; }
@@ -226,7 +227,7 @@ textarea { min-height: 64px; resize: vertical; }
   .adder-buttons { flex-direction: column; }
   .adder-btn { min-height: 50px; font-size: 1rem; }
   .product-section .choice-grid { grid-template-columns: 1fr 1fr; }
-  .product-section .choice label { min-height: 44px; padding: 9px; font-size: .82rem; }
+  .product-section .choice label { min-height: 44px; padding: 9px; font-size: .84rem; line-height: 1.2; }
   .card { padding: 16px; border-radius: 16px; }
   .form-section { padding: 13px 0; }
   input, textarea, select { min-height: 46px; padding: 11px 12px; font-size: 16px; }

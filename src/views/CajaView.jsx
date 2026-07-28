@@ -328,8 +328,9 @@ function PizzaSection({ visible, onAdd }) {
               <div key={f.value} className="choice">
                 <input id={`pizza-${f.value}`} type="checkbox" value={f.value}
                   checked={flavors.includes(f.value)} onChange={() => toggleFlavor(f.value)} />
-                <label htmlFor={`pizza-${f.value}`}>
-                  {f.label}{f.sub && <><br /><small>{f.sub}</small></>}
+                <label htmlFor={`pizza-${f.value}`} className="pizza-flavor-label">
+                  <span>{f.label}</span>
+                  {f.sub && <span className="pizza-flavor-sub">{f.sub}</span>}
                 </label>
               </div>
             ))}
