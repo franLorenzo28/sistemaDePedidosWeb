@@ -30,7 +30,7 @@ export default function StationView({ station, orders, onUpdate }) {
           const sectionOrders = active.filter(o => stationStatus(o, station) === s.key);
           const sorted = sectionOrders
             .filter(o => o.items.some(item => item.station === station))
-            .sort((a, b) => Number(a.number) - Number(b.number));
+            .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
           return (
             <div key={s.key} className="station-section">
               <div className="station-section-header" style={{ background: s.bg, color: s.color }}>

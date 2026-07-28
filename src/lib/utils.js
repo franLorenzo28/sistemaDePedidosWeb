@@ -20,8 +20,13 @@ export function statusLabel(status) {
   return ({ pendiente: 'Pendiente', preparando: 'Preparando', listo: 'Listo', entregado: 'Entregado' })[status] || status;
 }
 
-export function nextNumber(orders) {
-  return String((orders.reduce((max, order) => Math.max(max, Number(order.number) || 0), 0) || 0) + 1).padStart(3, '0');
+export function nextNumber(orders = []) {
+  if (!orders || !orders.length) return '001';
+  const getTime = o => typeof o.createdAt === 'number' ? o.createdAt : new Date(o.createdAt || 0).getTime() || 0;
+  const latestOrder = [...orders].sort((a, b) => getTime(b) - getTime(a))[0];
+  const lastNum = Number(latestOrder?.number) || 0;
+  const nextNum = (lastNum % 100) + 1;
+  return String(nextNum).padStart(3, '0');
 }
 
 export function relevantItems(order, station) {

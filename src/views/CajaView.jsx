@@ -72,9 +72,9 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
   const [notes, setNotes] = useState('');
   const formRef = useRef(null);
 
-  const cooking = orders.filter(o => o.status !== 'entregado' && o.status !== 'listo').sort((a, b) => Number(a.number) - Number(b.number));
-  const listos = orders.filter(o => o.status === 'listo').sort((a, b) => Number(a.number) - Number(b.number));
-  const entregados = orders.filter(o => o.status === 'entregado').sort((a, b) => Number(b.number) - Number(a.number)).slice(0, 10);
+  const cooking = orders.filter(o => o.status !== 'entregado' && o.status !== 'listo').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const listos = orders.filter(o => o.status === 'listo').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const entregados = orders.filter(o => o.status === 'entregado').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 10);
 
   const addDraftItem = (type, name, quantity, detail, pizzaStatus) => {
     setDraft(prev => [...prev, { type, name, quantity, detail, status: pizzaStatus || 'pendiente' }]);

@@ -21,7 +21,7 @@ export default function EntregaView({ orders, onUpdate }) {
         <div className="order-list">
           {ready.length
             ? ready
-                .sort((a, b) => Number(a.number) - Number(b.number))
+                .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
                 .map(o => <OrderCard key={o.id} order={o} station={null} onAction={handleAction} />)
             : <div className="empty">No hay pedidos para entregar.</div>
           }
