@@ -44,6 +44,21 @@ export default function App() {
   const popupTimer = useRef(null);
   const [userName, setUserName] = useState(loadName);
   const [nameInput, setNameInput] = useState('');
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('lobabi-dark-mode')) || false; } catch { return false; }
+  });
+
+  const toggleDark = useCallback(() => {
+    setDarkMode(prev => {
+      const next = !prev;
+      localStorage.setItem('lobabi-dark-mode', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : '';
+  }, [darkMode]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -110,7 +125,7 @@ export default function App() {
 
   return (
     <>
-      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} userName={userName} />
+      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} userName={userName} darkMode={darkMode} onToggleDark={toggleDark} />
       <main className="app-shell">
         {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={handleUpdateOrder} onDelete={deleteOrder} onClearAll={clearAllOrders} />}
         {view === 'monitor' && <MonitorView orders={orders} />}
