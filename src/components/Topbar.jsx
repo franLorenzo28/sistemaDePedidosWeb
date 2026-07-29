@@ -1,4 +1,4 @@
-export default function Topbar({ view, onNavigate, items, soundEnabled, onToggleSound }) {
+export default function Topbar({ view, onNavigate, items, soundEnabled, onToggleSound, userName }) {
   return (
     <header className="topbar">
       <a className="brand" href="?vista=caja" onClick={e => { e.preventDefault(); onNavigate('caja'); }}>
@@ -17,6 +17,7 @@ export default function Topbar({ view, onNavigate, items, soundEnabled, onToggle
           </a>
         ))}
       </nav>
+      {userName && <span className="topbar-user">👤 {userName}</span>}
       <button className="icon-btn sound-toggle" onClick={onToggleSound} title={soundEnabled ? 'Sonido activado' : 'Sonido desactivado'}>
         {soundEnabled ? '🔊' : '🔇'}
       </button>

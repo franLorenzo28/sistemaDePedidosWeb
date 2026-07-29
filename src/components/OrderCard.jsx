@@ -1,4 +1,4 @@
-import { timeAgo, statusLabel, relevantItems, STATION_ICONS, STATION_LABELS } from '../lib/utils.js';
+import { timeAgo, statusLabel, relevantItems, STATION_ICONS, STATION_LABELS, fmtOrderNumber } from '../lib/utils.js';
 
 export default function OrderCard({ order, station, onAction }) {
   const items = relevantItems(order, station);
@@ -9,11 +9,12 @@ export default function OrderCard({ order, station, onAction }) {
     : order.status;
   const next = currentStatus === 'pendiente' ? 'preparando'
     : currentStatus === 'preparando' ? 'listo'
-    : currentStatus === 'listo' && !station ? 'entregado' : null;
+    : currentStatus === 'listo' ? 'entregado' : null;
   const stationIcon = station ? STATION_ICONS[station] : '';
   const actionLabel = next === 'entregado' ? 'Entregado' : next === 'preparando' ? 'Empezar' : next === 'listo' ? 'Listo' : null;
   const actionClass = next === 'entregado' ? 'btn-primary' : 'btn-secondary';
   const totalQty = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
+  const assignedName = items.find(i => i.assignedTo)?.assignedTo;
 
   const otherStationsText = otherItems.length > 0
     ? [...new Set(otherItems.map(i => STATION_LABELS[i.station] || i.station))].join(', ')
@@ -23,12 +24,13 @@ export default function OrderCard({ order, station, onAction }) {
     <article className={`order-card status-${currentStatus}`}>
       <div className="order-head">
         <div>
-          <span className="order-number">Pedido #{order.number}</span>
+          <span className="order-number">Pedido #{fmtOrderNumber(order.number)}</span>
           <span className="order-qty"> ×{totalQty}</span>
           <span className="time"> · {timeAgo(order.createdAt)}</span>
         </div>
         <div className="order-head-right">
           {order.customer && <span className="order-customer">Ref: {order.customer}</span>}
+          {assignedName && <span className="order-assigned">👤 {assignedName}</span>}
           <span className={`badge ${currentStatus}`}>{statusLabel(currentStatus)}</span>
         </div>
       </div>

@@ -1,13 +1,13 @@
 import { useState, useRef } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import CompactOrder from '../components/CompactOrder.jsx';
-import { nextNumber, timeAgo } from '../lib/utils.js';
+import { nextNumber, timeAgo, fmtOrderNumber } from '../lib/utils.js';
 import { showToast } from '../hooks/useOrders.js';
 
-const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo', 'Doble pancho', 'Pancho con queso'];
-const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa con queso', 'Hamburguesa completa', 'Hamburguesa doble carne', 'Hamburguesa veggie'];
-const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Salsa criolla', 'Sin gustos'];
-const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Queso', 'Huevo', 'Jamón', 'Mayonesa', 'Ketchup', 'Mostaza', 'Sin gustos'];
+const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo'];
+const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa completa'];
+const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Sin gustos'];
+const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup', 'Mostaza', 'Sin gustos'];
 const PIZZA_FLAVORS = [
   { value: 'Caprese', label: 'Caprese', sub: 'albahaca y tomate' },
   { value: 'Panceta', label: 'Panceta' },
@@ -70,6 +70,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
   const [draft, setDraft] = useState([]);
   const [customer, setCustomer] = useState('');
   const [notes, setNotes] = useState('');
+  const [manualNumber, setManualNumber] = useState(nextNumber(orders));
   const formRef = useRef(null);
 
   const cooking = orders.filter(o => o.status !== 'entregado' && o.status !== 'listo').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
@@ -88,9 +89,9 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
       return { station, name: d.name, quantity: d.quantity, detail: d.detail, status: d.status || 'pendiente' };
     });
     if (!items.length) return showToast('Agregá al menos un producto.');
-    const order = { id: `local-${Date.now()}`, number: nextNumber(orders), customer: customer.trim(), notes: notes.trim(), items, status: 'pendiente', createdAt: Date.now() };
+    const order = { id: `local-${Date.now()}`, number: Number(manualNumber), customer: customer.trim(), notes: notes.trim(), items, status: 'pendiente', createdAt: Date.now() };
     await addOrder(order);
-    showToast(`Pedido ${order.number} enviado a cocina.`);
+    showToast(`Pedido ${fmtOrderNumber(order.number)} enviado a cocina.`);
     setDraft([]);
     setCustomer('');
     setNotes('');
@@ -119,7 +120,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
       <div className="layout caja-layout">
         <form ref={formRef} className="card caja-form" onSubmit={handleSubmit}>
           <div className="form-section">
-            <h2>Pedido {nextNumber(orders)}</h2>
+            <h2>Pedido <input className="number-input" type="number" min="1" value={manualNumber} onChange={e => setManualNumber(e.target.value)} /></h2>
             <label className="field-label">Nombre o referencia (opcional)</label>
             <input placeholder="Nombre..." value={customer} onChange={e => setCustomer(e.target.value)} />
           </div>
@@ -213,14 +214,14 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
 
 function PanchoSection({ onAdd }) {
   const [product, setProduct] = useState(PANCHO_OPTIONS[0]);
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState('1');
   const [ingredients, setIngredients] = useState([]);
   const [extra, setExtra] = useState('');
 
   const handleProductChange = (val) => {
     setProduct(val);
     if (val.toLowerCase().includes('completo')) {
-      setIngredients(PANCHO_INGREDIENTS.filter(i => i !== 'Sin gustos' && i !== 'Salsa criolla'));
+      setIngredients(PANCHO_INGREDIENTS.filter(i => i !== 'Sin gustos'));
     } else {
       setIngredients([]);
     }
@@ -228,10 +229,10 @@ function PanchoSection({ onAdd }) {
 
   const handleAdd = () => {
     const detail = [...ingredients, extra.trim()].filter(Boolean).join(', ');
-    onAdd('Panchos', product, qty, detail);
+    onAdd('Panchos', product, Number(qty) || 1, detail);
     setIngredients([]);
     setExtra('');
-    setQty(1);
+    setQty('1');
   };
 
   return (
@@ -245,7 +246,7 @@ function PanchoSection({ onAdd }) {
         </div>
         <div className="quantity-control">
           <label className="field-label">Cant.</label>
-          <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
+          <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} />
         </div>
         <div className="detail-control">
           <label className="field-label">Gustos / Aderezos</label>
@@ -260,16 +261,16 @@ function PanchoSection({ onAdd }) {
 
 function HamburguesaSection({ onAdd }) {
   const [product, setProduct] = useState(HAMBURGUESA_OPTIONS[0]);
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState('1');
   const [ingredients, setIngredients] = useState([]);
   const [extra, setExtra] = useState('');
 
   const handleProductChange = (val) => {
     setProduct(val);
     if (val.toLowerCase().includes('completa')) {
-      setIngredients(HAMBURGUESA_INGREDIENTS.filter(i => ['Tomate', 'Lechuga', 'Queso', 'Mayonesa', 'Ketchup'].includes(i)));
+      setIngredients(HAMBURGUESA_INGREDIENTS.filter(i => ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup'].includes(i)));
     } else if (val.toLowerCase().includes('queso')) {
-      setIngredients(['Queso']);
+      setIngredients([]);
     } else {
       setIngredients([]);
     }
@@ -277,10 +278,10 @@ function HamburguesaSection({ onAdd }) {
 
   const handleAdd = () => {
     const detail = [...ingredients, extra.trim()].filter(Boolean).join(', ');
-    onAdd('Hamburguesas', product, qty, detail);
+    onAdd('Hamburguesas', product, Number(qty) || 1, detail);
     setIngredients([]);
     setExtra('');
-    setQty(1);
+    setQty('1');
   };
 
   return (
@@ -294,7 +295,7 @@ function HamburguesaSection({ onAdd }) {
         </div>
         <div className="quantity-control">
           <label className="field-label">Cant.</label>
-          <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
+          <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} />
         </div>
         <div className="detail-control">
           <label className="field-label">Gustos / Aderezos</label>
@@ -312,7 +313,7 @@ const PIZZA_TYPE_OPTIONS = ['Porción', 'Pizza entera'];
 function PizzaSection({ onAdd }) {
   const [type, setType] = useState(PIZZA_TYPE_OPTIONS[0]);
   const [flavors, setFlavors] = useState([]);
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState('1');
   const [extra, setExtra] = useState('');
 
   const toggleFlavor = (val) => {
@@ -341,10 +342,10 @@ function PizzaSection({ onAdd }) {
       extra.trim()
     ].filter(Boolean).join(', ');
     const prefix = type === 'Porción' ? 'Porción' : 'Pizza';
-    onAdd('Pizzas', `${prefix} ${baseFlavors.join(' y ')}`, qty, detail, 'pendiente');
+    onAdd('Pizzas', `${prefix} ${baseFlavors.join(' y ')}`, Number(qty) || 1, detail, 'pendiente');
     setFlavors([]);
     setExtra('');
-    setQty(1);
+    setQty('1');
   };
 
   return (
@@ -358,7 +359,7 @@ function PizzaSection({ onAdd }) {
         </div>
         <div className="quantity-control">
           <label className="field-label">Cant.</label>
-          <input type="number" min="1" value={qty} onChange={e => setQty(Number(e.target.value) || 1)} />
+          <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} />
         </div>
         <div className="detail-control">
           <label className="field-label">Sabores</label>

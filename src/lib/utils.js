@@ -26,7 +26,11 @@ export function nextNumber(orders = []) {
   const latestOrder = [...orders].sort((a, b) => getTime(b) - getTime(a))[0];
   const lastNum = Number(latestOrder?.number) || 0;
   const nextNum = (lastNum % 100) + 1;
-  return String(nextNum).padStart(3, '0');
+  return String(nextNum).padStart(2, '0');
+}
+
+export function fmtOrderNumber(n) {
+  return String(n).padStart(2, '0');
 }
 
 export function relevantItems(order, station) {

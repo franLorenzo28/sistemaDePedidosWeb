@@ -1,4 +1,4 @@
-import { timeAgo, statusLabel, STATION_ICONS } from '../lib/utils.js';
+import { timeAgo, statusLabel, STATION_ICONS, fmtOrderNumber } from '../lib/utils.js';
 import { useState } from 'react';
 
 export default function CompactOrder({ order, showEdit, onEdit, onAction, onDelete }) {
@@ -6,10 +6,11 @@ export default function CompactOrder({ order, showEdit, onEdit, onAction, onDele
   return (
     <div className="compact-order">
       <div className="compact-head">
-        <span className="compact-number">Pedido #{order.number}</span>
+        <span className="compact-number">Pedido #{fmtOrderNumber(order.number)}</span>
         <span className="compact-time">{timeAgo(order.createdAt)}</span>
         <span className={`badge ${order.status}`}>{statusLabel(order.status)}</span>
         {order.customer && <span className="compact-customer">Referencia: {order.customer}</span>}
+        {order.items.some(i => i.assignedTo) && <span className="compact-assigned">👤 {order.items.find(i => i.assignedTo)?.assignedTo}</span>}
       </div>
       <div className="compact-items">
         {order.items.map((item, i) => {

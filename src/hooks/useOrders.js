@@ -50,6 +50,9 @@ export function useOrders() {
         osc.stop(ctx.currentTime + .18);
       } catch { }
     }
+    newOrders.forEach(o => {
+      window.dispatchEvent(new CustomEvent('new-order-popup', { detail: { order: o } }));
+    });
     document.title = `🔔 ${label} · Lobabi`;
     setTimeout(() => { document.title = 'Lobabi · Cantina'; }, 5000);
   }, [loaded, soundEnabled]);
@@ -93,6 +96,7 @@ export function useOrders() {
   const addOrder = useCallback(async (order) => {
     if (!supabaseReady) {
       setOrders(prev => { const next = [...prev, order]; saveLocal(next); return next; });
+      window.dispatchEvent(new CustomEvent('new-order-popup', { detail: { order } }));
       return;
     }
     const { error } = await supabaseRef.current.from('orders').insert({
@@ -102,15 +106,20 @@ export function useOrders() {
     if (error) throw error;
   }, []);
 
-  const updateOrder = useCallback(async (id, status, station) => {
+  const updateOrder = useCallback(async (id, status, station, assignedTo) => {
     setOrders(prev => {
       const found = prev.find(o => o.id === id);
       if (!found) return prev;
       let next;
       if (station) {
-        const updatedItems = found.items.map(item => item.station === station ? { ...item, status } : item);
+        const updatedItems = found.items.map(item =>
+          item.station === station
+            ? { ...item, status, assignedTo: item.assignedTo || (status === 'preparando' ? assignedTo : null) }
+            : item
+        );
         const itemStatuses = updatedItems.map(item => item.status || found.status || 'pendiente');
-        const newStatus = itemStatuses.every(s => s === 'listo' || s === 'entregado') ? 'listo'
+        const newStatus = itemStatuses.every(s => s === 'entregado') ? 'entregado'
+          : itemStatuses.every(s => s === 'listo' || s === 'entregado') ? 'listo'
           : itemStatuses.some(s => s !== 'pendiente') ? 'preparando' : 'pendiente';
         next = prev.map(o => o.id === id ? { ...o, items: updatedItems, status: newStatus } : o);
       } else {

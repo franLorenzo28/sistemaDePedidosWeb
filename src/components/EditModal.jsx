@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { STATION_ICONS, STATION_LABELS } from '../lib/utils.js';
+import { STATION_ICONS, STATION_LABELS, fmtOrderNumber } from '../lib/utils.js';
 
 export default function EditModal({ order, onSave, onClose }) {
   const [customer, setCustomer] = useState(order.customer || '');
@@ -8,7 +8,7 @@ export default function EditModal({ order, onSave, onClose }) {
   const [showAdd, setShowAdd] = useState(false);
   const [newStation, setNewStation] = useState('panchos');
   const [newName, setNewName] = useState('');
-  const [newQty, setNewQty] = useState(1);
+  const [newQty, setNewQty] = useState('1');
   const [newDetail, setNewDetail] = useState('');
 
   const handleSubmit = (e) => {
@@ -27,11 +27,11 @@ export default function EditModal({ order, onSave, onClose }) {
     if (!newName.trim()) return;
     const maxIndex = items.length ? Math.max(...items.map(i => i.index)) + 1 : 0;
     setItems(prev => [...prev, {
-      station: newStation, name: newName.trim(), quantity: newQty, detail: newDetail.trim(),
+      station: newStation, name: newName.trim(), quantity: Number(newQty) || 1, detail: newDetail.trim(),
       status: 'pendiente', index: maxIndex, delete: false
     }]);
     setNewName('');
-    setNewQty(1);
+    setNewQty('1');
     setNewDetail('');
     setShowAdd(false);
   };
@@ -40,7 +40,7 @@ export default function EditModal({ order, onSave, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <form className="modal card" onSubmit={handleSubmit} onClick={e => e.stopPropagation()}>
         <div className="order-head">
-          <h2>Editar pedido {order.number}</h2>
+          <h2>Editar pedido {fmtOrderNumber(order.number)}</h2>
           <button type="button" className="modal-close" onClick={onClose}>×</button>
         </div>
         <label className="field-label">Nombre o referencia</label>
@@ -75,7 +75,7 @@ export default function EditModal({ order, onSave, onClose }) {
             <label className="field-label">Nombre del producto</label>
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej: Pancho clásico" />
             <label className="field-label">Cantidad</label>
-            <input type="number" min="1" value={newQty} onChange={e => setNewQty(Number(e.target.value) || 1)} />
+            <input type="number" min="1" value={newQty} onChange={e => setNewQty(e.target.value)} />
             <label className="field-label">Detalles</label>
             <input value={newDetail} onChange={e => setNewDetail(e.target.value)} placeholder="Ej: con mayonesa y ketchup" />
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
