@@ -1,4 +1,5 @@
 import React from 'react';
+import PageHeader from '../components/PageHeader.jsx';
 import { fmtOrderNumber } from '../lib/utils.js';
 
 const COLUMNS_CONFIG = [
@@ -13,7 +14,13 @@ export default function MonitorView({ orders }) {
   const sortByTime = (a, b) => (b.createdAt || 0) - (a.createdAt || 0);
 
   return (
-    <div className="monitor-layout">
+    <div className="monitor-page">
+      <PageHeader title="Monitor de pedidos" subtitle="Estado de pedidos en tiempo real para clientes y personal." section="monitor" />
+      <div className="braulio-watermark">
+        <img src="/Braulio comiendo pancho sin fondo.png" alt="" className="braulio-img" />
+        <span className="braulio-text">¡¡Hace como Braulio y pedí en la Cantina Rover!!</span>
+      </div>
+      <div className="monitor-layout">
       {COLUMNS_CONFIG.map((col, i) => {
         const items = byStatus(col.key).sort(sortByTime);
         return (
@@ -37,6 +44,7 @@ export default function MonitorView({ orders }) {
           </React.Fragment>
         );
       })}
+      </div>
     </div>
   );
 }

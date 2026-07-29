@@ -1,4 +1,4 @@
-export default function PageHeader({ title, subtitle }) {
+export default function PageHeader({ title, subtitle, section }) {
   return (
     <>
       <p className="eyebrow">Rovers Südliches Dreieck · Cantina</p>
@@ -7,3 +7,4 @@ export default function PageHeader({ title, subtitle }) {
     </>
   );
 }
+

@@ -20,10 +20,11 @@ export default function StationView({ station, orders, onUpdate }) {
   };
 
   return (
-    <>
+    <div className="station-page">
       <PageHeader
         title={`${stationIcon} Sector ${stationLabel}`}
         subtitle={`Prepará en orden los pedidos de ${stationLabel.toLowerCase()}. Tocá un pedido para avanzar su estado.`}
+        section={station}
       />
 <div className="station-queue">
         {SECTIONS.map(s => {
@@ -46,6 +47,6 @@ export default function StationView({ station, orders, onUpdate }) {
           );
         })}
       </div>
-    </>
+    </div>
   );
 }

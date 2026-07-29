@@ -25,3 +25,4 @@ export default function Topbar({ view, onNavigate, items, soundEnabled, onToggle
     </header>
   );
 }
+

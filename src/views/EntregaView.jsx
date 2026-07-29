@@ -11,8 +11,8 @@ export default function EntregaView({ orders, onUpdate }) {
   };
 
   return (
-    <>
-      <PageHeader title="🚗 Entrega" subtitle="Pedidos listos para entregar al cliente." />
+    <div className="entrega-page">
+      <PageHeader title="🚗 Entrega" subtitle="Pedidos listos para entregar al cliente." section="entrega" />
       <div className="stats">
         <div className="stat"><strong>{ready.length}</strong><span>Para entregar</span></div>
       </div>
@@ -27,6 +27,6 @@ export default function EntregaView({ orders, onUpdate }) {
           }
         </div>
       </div>
-    </>
+    </div>
   );
 }

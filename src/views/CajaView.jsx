@@ -110,7 +110,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ flex: 1 }}>
-          <PageHeader title="Nuevo pedido" subtitle="Cargá los detalles y cada sector recibirá lo que le corresponde." />
+          <PageHeader title="Nuevo pedido" subtitle="Cargá los detalles y cada sector recibirá lo que le corresponde." section="caja" />
         </div>
         <button className="btn btn-ghost" style={{ fontSize: '.72rem', padding: '4px 10px', whiteSpace: 'nowrap' }}
           onClick={() => { if (confirm('¿Resetear todos los pedidos? Se perderán todos los datos.')) onClearAll(); }}>

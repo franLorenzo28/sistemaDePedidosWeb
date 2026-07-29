@@ -30,7 +30,7 @@ export default function StatsView({ orders }) {
 
   return (
     <>
-      <PageHeader title="📊 Estadísticas" subtitle="Pedidos entregados por sector." />
+      <PageHeader title="📊 Estadísticas" subtitle="Pedidos entregados por sector." section="estadisticas" />
       <div className="stats" style={{ marginBottom: 16 }}>
         <div className="stat"><strong>{totalEntregados}</strong><span>Pedidos entregados</span></div>
         <div className="stat"><strong>{totalItems}</strong><span>Productos vendidos</span></div>
