@@ -24,13 +24,13 @@ function playAlertSound() {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = 520;
-    gain.gain.value = .02;
+    osc.type = 'sine';
+    osc.frequency.value = 660;
+    gain.gain.value = .08;
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + .06);
+    osc.stop(ctx.currentTime + .15);
   } catch { }
 }
 
