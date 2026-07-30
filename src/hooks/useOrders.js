@@ -20,8 +20,6 @@ export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(loadSoundPref);
-  const soundEnabledRef = useRef(soundEnabled);
-  soundEnabledRef.current = soundEnabled;
   const supabaseRef = useRef(null);
   const channelRef = useRef(null);
   const knownIdsRef = useRef(new Set());
@@ -39,19 +37,6 @@ export function useOrders() {
     if (!newOrders.length) return;
     const label = newOrders.length === 1 ? `Nuevo pedido ${newOrders[0].number}` : `${newOrders.length} pedidos nuevos`;
     showToast(`🔔 ${label}: revisar cocina.`);
-    if (soundEnabledRef.current) {
-      try {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = 880;
-        gain.gain.value = .08;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + .18);
-      } catch { }
-    }
     newOrders.forEach(o => {
       window.dispatchEvent(new CustomEvent('new-order-popup', { detail: { order: o } }));
     });

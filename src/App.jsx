@@ -19,19 +19,18 @@ function loadName() {
 }
 function saveName(val) { localStorage.setItem('lobabi-user-name', val); }
 
-function playAlertSound(duration = 3) {
+function playAlertSound() {
   try {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 660;
-    gain.gain.value = .1;
+    osc.type = 'triangle';
+    osc.frequency.value = 520;
+    gain.gain.value = .02;
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-    osc.stop(ctx.currentTime + duration);
+    osc.stop(ctx.currentTime + .06);
   } catch { }
 }
 
@@ -45,6 +44,7 @@ export default function App() {
   const [nameInput, setNameInput] = useState('');
   const soundEnabledRef = useRef(soundEnabled);
   soundEnabledRef.current = soundEnabled;
+  const lastPopupId = useRef(null);
 
   const [darkMode, setDarkMode] = useState(() => {
     try { return JSON.parse(localStorage.getItem('lobabi-dark-mode')) || false; } catch { return false; }
@@ -70,10 +70,12 @@ export default function App() {
   const handleNewOrder = useCallback((e) => {
     if (!STATIONS.includes(view)) return;
     const order = e.detail.order;
+    if (lastPopupId.current === order.id) return;
+    lastPopupId.current = order.id;
     setPopupOrder(order);
-    if (soundEnabledRef.current) playAlertSound(3);
+    if (soundEnabledRef.current) playAlertSound();
     clearTimeout(popupTimer.current);
-    popupTimer.current = setTimeout(() => setPopupOrder(null), 3000);
+    popupTimer.current = setTimeout(() => setPopupOrder(null), 2000);
   }, [view]);
 
   useEffect(() => {
