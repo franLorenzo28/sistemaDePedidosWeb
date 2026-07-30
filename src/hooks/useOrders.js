@@ -20,6 +20,8 @@ export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(loadSoundPref);
+  const soundEnabledRef = useRef(soundEnabled);
+  soundEnabledRef.current = soundEnabled;
   const supabaseRef = useRef(null);
   const channelRef = useRef(null);
   const knownIdsRef = useRef(new Set());
@@ -37,7 +39,7 @@ export function useOrders() {
     if (!newOrders.length) return;
     const label = newOrders.length === 1 ? `Nuevo pedido ${newOrders[0].number}` : `${newOrders.length} pedidos nuevos`;
     showToast(`🔔 ${label}: revisar cocina.`);
-    if (soundEnabled) {
+    if (soundEnabledRef.current) {
       try {
         const ctx = new AudioContext();
         const osc = ctx.createOscillator();
@@ -55,7 +57,7 @@ export function useOrders() {
     });
     document.title = `🔔 ${label} · Lobabi`;
     setTimeout(() => { document.title = 'Lobabi · Cantina'; }, 5000);
-  }, [loaded, soundEnabled]);
+  }, [loaded]);
 
   useEffect(() => {
     let cancel = false;
@@ -82,6 +84,7 @@ export function useOrders() {
       }
 
       await refresh();
+      if (cancel) return;
       channelRef.current = supabase.channel('orders-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, refresh)
         .subscribe();
@@ -114,7 +117,7 @@ export function useOrders() {
       if (station) {
         const updatedItems = found.items.map(item =>
           item.station === station
-            ? { ...item, status, assignedTo: item.assignedTo || (status === 'preparando' ? assignedTo : null) }
+            ? { ...item, status }
             : item
         );
         const itemStatuses = updatedItems.map(item => item.status || found.status || 'pendiente');
@@ -129,6 +132,25 @@ export function useOrders() {
       const updated = next.find(o => o.id === id);
       supabaseRef.current.from('orders')
         .update({ status: updated.status, items: updated.items, updated_at: Date.now() })
+        .eq('id', id)
+        .then(({ error }) => { if (error) showToast(`Supabase: ${error.message}`); });
+      return next;
+    });
+  }, []);
+
+  const assignItems = useCallback(async (id, station, assignedTo) => {
+    setOrders(prev => {
+      const found = prev.find(o => o.id === id);
+      if (!found) return prev;
+      const updatedItems = found.items.map(item =>
+        item.station === station && !item.assignedTo
+          ? { ...item, assignedTo }
+          : item
+      );
+      const next = prev.map(o => o.id === id ? { ...o, items: updatedItems } : o);
+      if (!supabaseReady) { saveLocal(next); return next; }
+      supabaseRef.current.from('orders')
+        .update({ items: updatedItems, updated_at: Date.now() })
         .eq('id', id)
         .then(({ error }) => { if (error) showToast(`Supabase: ${error.message}`); });
       return next;
@@ -168,7 +190,7 @@ export function useOrders() {
     saveLocal([]);
   }, []);
 
-  return { orders, addOrder, updateOrder, saveEditedOrder, deleteOrder, clearAllOrders, toggleSound, soundEnabled };
+  return { orders, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, clearAllOrders, toggleSound, soundEnabled };
 }
 
 function showToast(message) {

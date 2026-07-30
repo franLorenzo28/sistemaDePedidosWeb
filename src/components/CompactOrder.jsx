@@ -1,7 +1,7 @@
-import { timeAgo, statusLabel, STATION_ICONS, fmtOrderNumber } from '../lib/utils.js';
+import { timeAgo, statusLabel, STATION_ICONS, STATION_LABELS, fmtOrderNumber } from '../lib/utils.js';
 import { useState } from 'react';
 
-export default function CompactOrder({ order, showEdit, onEdit, onAction, onDelete }) {
+export default function CompactOrder({ order, showEdit, onEdit, onAction, onDelete, onAssign }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   return (
     <div className="compact-order">
@@ -10,7 +10,7 @@ export default function CompactOrder({ order, showEdit, onEdit, onAction, onDele
         <span className="compact-time">{timeAgo(order.createdAt)}</span>
         <span className={`badge ${order.status}`}>{statusLabel(order.status)}</span>
         {order.customer && <span className="compact-customer">Referencia: {order.customer}</span>}
-        {order.items.some(i => i.assignedTo) && <span className="compact-assigned">👤 {order.items.find(i => i.assignedTo)?.assignedTo}</span>}
+        {order.items.some(i => i.assignedTo) && <span className="compact-assigned">Asignado: {order.items.find(i => i.assignedTo)?.assignedTo}</span>}
       </div>
       <div className="compact-items">
         {order.items.map((item, i) => {
@@ -27,6 +27,11 @@ export default function CompactOrder({ order, showEdit, onEdit, onAction, onDele
       </div>
       {order.notes && <div className="compact-note">Nota: {order.notes}</div>}
       <div className="compact-actions">
+        {onAssign && [...new Set(order.items.filter(i => !i.assignedTo).map(i => i.station).filter(Boolean))].map(st => (
+          <button key={st} className="btn btn-ghost compact-action-btn" onClick={() => onAssign(order.id, st)}>
+            {STATION_ICONS[st]} Asignarme
+          </button>
+        ))}
         {showEdit && (
           <button className="btn btn-ghost compact-action-btn" onClick={() => onEdit(order.id)}>✏️ Editar</button>
         )}

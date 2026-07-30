@@ -22,11 +22,18 @@ button { cursor: pointer; border: 0; }
 .brand small { display: block; font-size: .58rem; font-weight: 600; letter-spacing: .12em; opacity: .7; text-transform: uppercase; }
 .brand-mark { color: var(--yellow); font-size: 1.4rem; }
 .main-nav { display: flex; gap: 3px; overflow-x: auto; margin-left: auto; }
+.left-nav { display: flex; gap: 3px; overflow-x: auto; }
 .nav-link { color: #bfdbfe; padding: 7px 9px; border-radius: 8px; text-decoration: none; font-size: .8rem; font-weight: 800; white-space: nowrap; }
 .nav-link.active, .nav-link:hover { background: rgba(255,255,255,.14); color: white; }
 .sound-toggle { background: transparent; border: 0; font-size: 1rem; cursor: pointer; padding: 4px 8px; border-radius: 8px; color: white; flex-shrink: 0; }
 .sound-toggle:hover { background: rgba(255,255,255,.1); }
+.hamburger-toggle { display: none; background: transparent; border: 0; cursor: pointer; padding: 6px; border-radius: 8px; flex-shrink: 0; flex-direction: column; gap: 4px; margin-left: auto; }
+.hamburger-line { display: block; width: 20px; height: 2px; background: white; border-radius: 1px; }
+.mobile-menu { display: none; }
+.mobile-nav-link { color: #bfdbfe; padding: 12px 14px; border-radius: 10px; text-decoration: none; font-size: .9rem; font-weight: 800; display: flex; }
+.mobile-nav-link.active, .mobile-nav-link:hover { background: rgba(255,255,255,.14); color: white; }
 .app-shell { max-width: 1440px; margin: 0 auto; padding: clamp(12px, 3vw, 28px) clamp(10px, 3vw, 24px) 60px; }
+.app-shell:has(.monitor-page) { padding: 0; max-width: 100%; }
 .page-title { margin: 0 0 4px; font-size: clamp(1.5rem, 3.5vw, 2.2rem); color: var(--green-950); }
 .page-subtitle { margin: 0 0 18px; color: var(--muted); font-size: .85rem; }
 .eyebrow { color: var(--green-700); font-size: .90rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
@@ -68,7 +75,7 @@ textarea { min-height: 50px; resize: vertical; }
 .station-queue .order-card { padding: 12px 14px; }
 .order-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .order-head-right { display: flex; align-items: center; gap: 8px; }
-.order-assigned { font-size: .72rem; color: var(--ink); white-space: nowrap; }
+.order-assigned { font-size: .72rem; color: var(--ink); white-space: nowrap; font-weight: 700; }
 .order-number { font-size: 1.1rem; font-weight: 900; color: var(--green-950); }
 .order-customer { color: var(--muted); font-size: .88rem; font-weight: 700; text-transform: uppercase; }
 .time { color: var(--muted); font-size: .73rem; }
@@ -166,7 +173,7 @@ textarea { min-height: 50px; resize: vertical; }
 .compact-item-icon { font-size: .85rem; flex-shrink: 0; }
 .compact-qty { font-weight: 900; color: var(--green-700); font-size: .82rem; flex-shrink: 0; }
 .compact-customer { color: var(--muted); font-size: .82rem; white-space: nowrap; text-transform: uppercase; }
-.compact-assigned { color: var(--ink); font-size: .78rem; white-space: nowrap; }
+.compact-assigned { color: var(--ink); font-size: .78rem; white-space: nowrap; font-weight: 700; }
 .compact-note { color: var(--muted); font-size: .74rem; font-style: italic; }
 .compact-actions { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
 .compact-action-btn { padding: 10px 12px; font-size: .78rem; min-height: 44px; font-weight: 800; flex: 1; text-align: center; }
@@ -236,12 +243,14 @@ textarea { min-height: 50px; resize: vertical; }
 }
 @media (max-width: 760px) {
   body { -webkit-text-size-adjust: 100%; }
-  .topbar { position: sticky; top: 0; z-index: 10; min-height: auto; padding: 8px 10px 6px; align-items: stretch; flex-direction: row; gap: 4px; flex-wrap: wrap; }
+  .topbar { position: relative; z-index: 10; min-height: auto; padding: 8px 10px 6px; align-items: stretch; flex-direction: row; gap: 4px; flex-wrap: wrap; }
+  .mobile-menu { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; z-index: 9; background: var(--green-900); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 8px 24px rgba(0,0,0,.3); padding: 6px 10px 14px; gap: 2px; }
   .brand { font-size: .95rem; }
   .brand-mark { font-size: 1.2rem; }
-  .main-nav { width: 100%; margin: 0 -1px; gap: 2px; padding-bottom: 1px; }
+  .main-nav, .left-nav { display: none; }
+  .hamburger-toggle { display: flex; }
+  .topbar-right { margin-left: auto; }
   .nav-link { min-height: 38px; padding: 8px 10px; display: inline-flex; align-items: center; font-size: .76rem; }
-  .sound-toggle { margin-left: auto; }
   .app-shell { padding: 16px 8px 36px; }
   .eyebrow { margin: 0 0 5px; font-size: .78rem; }
   .page-title { font-size: 1.5rem; line-height: 1.1; }
@@ -283,6 +292,9 @@ textarea { min-height: 50px; resize: vertical; }
 .station-queue .order-card { padding: 10px; }
   .station-queue .item-line { padding: 7px 0; font-size: .78rem; }
   .toast { right: 8px; bottom: 8px; left: 8px; text-align: center; }
+  .mobile-menu { display: flex; flex-direction: column; position: fixed; top: 52px; left: 0; right: 0; z-index: 9; background: var(--green-900); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 8px 24px rgba(0,0,0,.3); padding: 6px 10px 14px; gap: 2px; }
+  .mobile-nav-link { color: #bfdbfe; padding: 12px 14px; border-radius: 10px; text-decoration: none; font-size: .9rem; font-weight: 800; }
+  .mobile-nav-link.active, .mobile-nav-link:hover { background: rgba(255,255,255,.14); color: white; }
 }
 @media (max-width: 420px) {
   .app-shell { padding-inline: 8px; }
@@ -293,9 +305,12 @@ textarea { min-height: 50px; resize: vertical; }
   .badge { white-space: nowrap; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
-  .topbar { position: sticky; top: 0; z-index: 10; min-height: 42px; padding: 5px 10px; flex-direction: row; align-items: center; }
+  .topbar { position: relative; min-height: 42px; padding: 5px 10px; flex-direction: row; align-items: center; }
+  .mobile-menu { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; z-index: 9; background: var(--green-900); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 8px 24px rgba(0,0,0,.3); padding: 4px 8px 10px; gap: 2px; }
   .brand { flex: 0 0 auto; }
-  .main-nav { justify-content: flex-end; }
+  .main-nav, .left-nav { display: none; }
+  .hamburger-toggle { display: flex; }
+  .topbar-right { margin-left: auto; }
   .nav-link { min-height: 32px; padding: 6px 8px; font-size: .72rem; }
   .app-shell { padding: 8px 12px 20px; }
   .eyebrow { margin: 0 0 2px; font-size: .72rem; }
@@ -321,19 +336,17 @@ textarea { min-height: 50px; resize: vertical; }
   .caja-layout > section { max-height: none; }
 }
 /* small laptop / short screens */
-@media (max-height: 800px) {
-  .app-shell { padding-top: 10px; padding-bottom: 20px; }
-  .eyebrow { margin-bottom: 2px; }
-  .page-title { margin-bottom: 2px; }
-  .page-subtitle { margin-bottom: 8px; }
-  .monitor-layout { padding: 8px 12px; height: calc(100vh - 50px); }
+@media (max-height: 800px) and (min-width: 761px) {
+  .monitor-layout { padding: 8px 12px; height: calc(100vh - 48px); }
   .monitor-col { padding: 6px 10px; }
   .monitor-col-header { margin-bottom: 8px; padding-bottom: 8px; }
-  .monitor-col-header h2 { font-size: 1.2rem; }
+  .monitor-col-header h2 { font-size: 1.3rem; }
   .monitor-count { min-width: 28px; height: 28px; font-size: .9rem; }
   .monitor-num { font-size: 2.2rem; }
   .monitor-ref { font-size: .78rem; }
   .monitor-empty { font-size: 1rem; padding: 20px 0; }
+}
+@media (max-height: 800px) {
   .station-stats { margin-bottom: 6px; }
   .station-stat { padding: 4px 6px; }
   .station-stat strong { font-size: 1rem; }
@@ -349,51 +362,52 @@ textarea { min-height: 50px; resize: vertical; }
 .monitor-page { position: relative; }
 .station-page, .entrega-page { position: relative; }
 
-.braulio-watermark {
-  position: fixed; left: 12px; top: 200px;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  pointer-events: none; user-select: none;
-  z-index: 0;
-  max-width: 200px;
-}
-.braulio-img {
-  height: 28vh; max-height: 200px;
-}
-.braulio-text {
-  font-size: 20px; font-weight: 700; color: #fbbf24;
-  text-shadow: 1px 1px 3px rgba(0,0,0,.6);
-  line-height: 1.2; text-align: center;
-}
-
 .monitor-layout {
-  display: grid; grid-template-columns: auto 2px auto 2px auto 2px auto;
-  gap: 0; justify-content: center;
-  padding: 20px; margin: 0 auto;
-  height: calc(100vh - 60px); box-sizing: border-box;
-  align-items: start;
+  display: flex; flex-direction: column; gap: 0;
+  padding: 12px; margin: 0 auto;
+}
+@media (min-width: 761px) {
+  .monitor-layout {
+    display: grid; grid-template-columns: 1fr 2px 1fr 2px 1fr;
+    gap: 0; justify-content: center;
+    padding: 20px; max-width: 1200px;
+    height: calc(100vh - 48px); box-sizing: border-box;
+    align-items: start;
+    margin: 0 auto;
+  }
 }
 .monitor-col {
   display: flex; flex-direction: column;
-  padding: 12px 20px;
+  padding: 12px 16px;
+}
+@media (min-width: 761px) {
+  .monitor-col {
+    padding: 12px 20px;
+  }
 }
 .monitor-sep {
   background: rgba(0,0,0,.12);
-  width: 2px; align-self: stretch;
+  width: 100%; height: 2px; align-self: stretch;
   border-radius: 1px;
+}
+@media (min-width: 761px) {
+  .monitor-sep {
+    width: 2px; height: auto;
+  }
 }
 .monitor-col-header {
   text-align: center; margin-bottom: 16px;
   border-bottom: 3px solid; padding-bottom: 14px;
 }
 .monitor-col-header h2 {
-  margin: 0; font-size: 1.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
-  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin: 0; font-size: 1.35rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+  display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
 }
 .monitor-count {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 36px; height: 36px;
-  border-radius: 18px; padding: 0 12px;
-  font-size: 1.1rem; font-weight: 800;
+  min-width: 28px; height: 28px;
+  border-radius: 14px; padding: 0 8px;
+  font-size: .85rem; font-weight: 800;
 }
 .monitor-col-body {
   flex: 1; overflow-y: auto;
@@ -495,6 +509,7 @@ textarea { min-height: 50px; resize: vertical; }
   font-size: .82rem; color: var(--green-100);
   white-space: nowrap; margin-right: 8px;
 }
+.topbar-right { display: flex; align-items: center; gap: 2px; }
 
 [data-theme="dark"] {
   --cream: #0f172a;

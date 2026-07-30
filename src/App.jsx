@@ -11,9 +11,8 @@ import EditModal from './components/EditModal.jsx';
 const STATIONS = ['panchos', 'hamburguesas', 'pizzas'];
 const STATION_ICONS = { panchos: '🌭', hamburguesas: '🍔', pizzas: '🍕' };
 
-const NAV_ITEMS = [
-  ['caja', 'Caja'], ['monitor', 'Monitor'], ['panchos', 'Panchos'], ['hamburguesas', 'Hamburguesas'], ['pizzas', 'Pizzas'], ['entrega', 'Entrega'], ['estadisticas', '📊 Stats']
-];
+const NAV_ITEMS = [['caja', 'Caja'], ['panchos', 'Panchos'], ['hamburguesas', 'Hamburguesas'], ['pizzas', 'Pizzas'], ['entrega', 'Entrega']];
+const LEFT_NAV_ITEMS = [['monitor', 'Monitor'], ['estadisticas', '📊 Stats']];
 
 function loadName() {
   try { return localStorage.getItem('lobabi-user-name') || ''; } catch { return ''; }
@@ -37,13 +36,16 @@ function playAlertSound(duration = 3) {
 }
 
 export default function App() {
-  const { orders, addOrder, updateOrder, saveEditedOrder, deleteOrder, clearAllOrders, toggleSound, soundEnabled } = useOrders();
+  const { orders, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, clearAllOrders, toggleSound, soundEnabled } = useOrders();
   const [view, setView] = useState(() => new URLSearchParams(location.search).get('vista') || 'caja');
   const [editingOrder, setEditingOrder] = useState(null);
   const [popupOrder, setPopupOrder] = useState(null);
   const popupTimer = useRef(null);
   const [userName, setUserName] = useState(loadName);
   const [nameInput, setNameInput] = useState('');
+  const soundEnabledRef = useRef(soundEnabled);
+  soundEnabledRef.current = soundEnabled;
+
   const [darkMode, setDarkMode] = useState(() => {
     try { return JSON.parse(localStorage.getItem('lobabi-dark-mode')) || false; } catch { return false; }
   });
@@ -69,10 +71,10 @@ export default function App() {
     if (!STATIONS.includes(view)) return;
     const order = e.detail.order;
     setPopupOrder(order);
-    if (soundEnabled) playAlertSound(3);
+    if (soundEnabledRef.current) playAlertSound(3);
     clearTimeout(popupTimer.current);
     popupTimer.current = setTimeout(() => setPopupOrder(null), 3000);
-  }, [view, soundEnabled]);
+  }, [view]);
 
   useEffect(() => {
     window.addEventListener('new-order-popup', handleNewOrder);
@@ -97,6 +99,10 @@ export default function App() {
 
   const handleUpdateOrder = (id, status, station) => {
     updateOrder(id, status, station, userName);
+  };
+
+  const handleAssign = (id, station) => {
+    assignItems(id, station, userName);
   };
 
   const stationItems = popupOrder ? popupOrder.items.filter(item => STATIONS.includes(item.station)) : [];
@@ -125,13 +131,13 @@ export default function App() {
 
   return (
     <>
-      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} userName={userName} darkMode={darkMode} onToggleDark={toggleDark} />
+      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} leftItems={LEFT_NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} userName={userName} darkMode={darkMode} onToggleDark={toggleDark} />
       <main className="app-shell">
-        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={handleUpdateOrder} onDelete={deleteOrder} onClearAll={clearAllOrders} />}
+        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={handleUpdateOrder} onDelete={deleteOrder} onClearAll={clearAllOrders} onAssign={handleAssign} />}
         {view === 'monitor' && <MonitorView orders={orders} />}
         {view === 'entrega' && <EntregaView orders={orders} onUpdate={handleUpdateOrder} />}
         {view === 'estadisticas' && <StatsView orders={orders} />}
-        {STATIONS.includes(view) && <StationView station={view} orders={orders} onUpdate={handleUpdateOrder} userName={userName} />}
+        {STATIONS.includes(view) && <StationView station={view} orders={orders} onUpdate={handleUpdateOrder} onAssign={handleAssign} userName={userName} />}
       </main>
       {editingOrder && (
         <EditModal order={editingOrder} onSave={handleSaveEdit} onClose={() => setEditingOrder(null)} />

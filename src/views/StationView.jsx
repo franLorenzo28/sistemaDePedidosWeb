@@ -9,7 +9,7 @@ const SECTIONS = [
   { key: 'listo', label: 'Listos', color: '#14532d', bg: '#86efac', border: '#16a34a' },
 ];
 
-export default function StationView({ station, orders, onUpdate }) {
+export default function StationView({ station, orders, onUpdate, onAssign }) {
   const active = orders.filter(o => o.status !== 'entregado' && o.items.some(item => item.station === station));
   const stationIcon = STATION_ICONS[station] || '';
   const stationLabel = STATION_LABELS[station];
@@ -39,7 +39,7 @@ export default function StationView({ station, orders, onUpdate }) {
               </div>
               <div className="order-list">
                 {sorted.length
-                  ? sorted.map(o => <OrderCard key={o.id} order={o} station={station} onAction={handleAction} />)
+                  ? sorted.map(o => <OrderCard key={o.id} order={o} station={station} onAction={handleAction} onAssign={onAssign} />)
                   : <div className="empty">No hay pedidos</div>
                 }
               </div>

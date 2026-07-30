@@ -1,6 +1,6 @@
 import { timeAgo, statusLabel, relevantItems, STATION_ICONS, STATION_LABELS, fmtOrderNumber } from '../lib/utils.js';
 
-export default function OrderCard({ order, station, onAction }) {
+export default function OrderCard({ order, station, onAction, onAssign }) {
   const items = relevantItems(order, station);
   const otherItems = station ? order.items.filter(item => item.station !== station) : [];
   const currentStatus = station
@@ -30,7 +30,7 @@ export default function OrderCard({ order, station, onAction }) {
         </div>
         <div className="order-head-right">
           {order.customer && <span className="order-customer">Ref: {order.customer}</span>}
-          {assignedName && <span className="order-assigned">👤 {assignedName}</span>}
+          {assignedName && <span className="order-assigned">Asignado: {assignedName}</span>}
           <span className={`badge ${currentStatus}`}>{statusLabel(currentStatus)}</span>
         </div>
       </div>
@@ -50,6 +50,11 @@ export default function OrderCard({ order, station, onAction }) {
         </div>
       )}
       {order.notes && <p className="order-notes">📝 {order.notes}</p>}
+      {!assignedName && onAssign && (
+        <button className="btn btn-ghost order-action-btn" onClick={() => onAssign(order.id, station)}>
+          👤 Asignarme pedido
+        </button>
+      )}
       {next && (
         <button className={`btn ${actionClass} order-action-btn`} onClick={() => onAction(order.id, next, station || null)}>
           {actionLabel}

@@ -5,7 +5,7 @@ import { nextNumber, timeAgo, fmtOrderNumber } from '../lib/utils.js';
 import { showToast } from '../hooks/useOrders.js';
 
 const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo'];
-const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa completa'];
+const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa completa', 'Hamburguesa veggie'];
 const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Sin gustos'];
 const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup', 'Mostaza', 'Sin gustos'];
 const PIZZA_FLAVORS = [
@@ -65,7 +65,7 @@ function IngredientGrid({ id, ingredients, checked, onChange }) {
   );
 }
 
-export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete, onClearAll }) {
+export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete, onClearAll, onAssign }) {
   const [activeTab, setActiveTab] = useState('Panchos');
   const [draft, setDraft] = useState([]);
   const [customer, setCustomer] = useState('');
@@ -173,7 +173,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
               <h2>En preparación</h2>
               <div className="compact-list">
                 {cooking.length
-                  ? cooking.map(o => <CompactOrder key={o.id} order={o} showEdit={true} onEdit={onEdit} onAction={onUpdate} onDelete={onDelete} />)
+                  ? cooking.map(o => <CompactOrder key={o.id} order={o} showEdit={true} onEdit={onEdit} onAction={onUpdate} onDelete={onDelete} onAssign={onAssign} />)
                   : <div className="empty">No hay pedidos en cocina.</div>
                 }
               </div>
