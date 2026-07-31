@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import OrderCard from '../components/OrderCard.jsx';
+import StockBar from '../components/StockBar.jsx';
 import { STATION_LABELS, stationStatus, STATION_ICONS } from '../lib/utils.js';
 import { showToast } from '../lib/toast.js';
 
@@ -34,6 +35,7 @@ export default function StationView({ station, orders, onUpdate, onAssign }) {
         subtitle={`Prepará en orden los pedidos de ${stationLabel.toLowerCase()}. Tocá un pedido para avanzar su estado.`}
         section={station}
       />
+      <StockBar station={station} orders={orders} />
       <div className="station-queue">
         {sectionOrders.map(s => (
           <div key={s.key} className="station-section">
