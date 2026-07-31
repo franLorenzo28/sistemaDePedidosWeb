@@ -1,14 +1,15 @@
+import { useMemo, useCallback } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import OrderCard from '../components/OrderCard.jsx';
-import { showToast } from '../hooks/useOrders.js';
+import { showToast } from '../lib/toast.js';
 
 export default function EntregaView({ orders, onUpdate }) {
-  const ready = orders.filter(o => o.status === 'listo');
+  const ready = useMemo(() => orders.filter(o => o.status === 'listo'), [orders]);
 
-  const handleAction = async (id) => {
+  const handleAction = useCallback(async (id) => {
     await onUpdate(id, 'entregado', null);
     showToast('Pedido actualizado: Entregado.');
-  };
+  }, [onUpdate]);
 
   return (
     <div className="entrega-page">
@@ -20,7 +21,7 @@ export default function EntregaView({ orders, onUpdate }) {
         <h2>Pedidos listos</h2>
         <div className="order-list">
           {ready.length
-            ? ready
+            ? [...ready]
                 .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
                 .map(o => <OrderCard key={o.id} order={o} station={null} onAction={handleAction} />)
             : <div className="empty">No hay pedidos para entregar.</div>

@@ -17,7 +17,7 @@ export function timeAgo(timestamp) {
 }
 
 export function statusLabel(status) {
-  return ({ pendiente: 'Pendiente', preparando: 'Preparando', listo: 'Listo', entregado: 'Entregado' })[status] || status;
+  return ({ pendiente: 'Pendiente', preparando: 'Preparando', listo: 'Listo', entregado: 'Entregado', cancelado: 'Cancelado' })[status] || status;
 }
 
 export function nextNumber(orders = []) {
@@ -43,12 +43,4 @@ export function stationStatus(order, station) {
     : items.some(item => (item.status || order.status) !== 'pendiente') ? 'preparando' : 'pendiente';
 }
 
-export const STATION_LABELS = { panchos: 'Panchos', hamburguesas: 'Hamburguesas', pizzas: 'Pizzas' };
-
-export const STATION_ICONS = { panchos: '🌭', hamburguesas: '🍔', pizzas: '🍕' };
-
-export const PRODUCT_ICONS = {
-  panchos: '🌭',
-  hamburguesas: '🍔',
-  pizzas: '🍕',
-};
+export { STATION_LABELS, STATION_ICONS, PRODUCT_ICONS, STATIONS } from './constants.js';

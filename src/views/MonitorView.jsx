@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { fmtOrderNumber } from '../lib/utils.js';
 
 const COLUMNS_CONFIG = [
@@ -8,35 +8,36 @@ const COLUMNS_CONFIG = [
 ];
 
 export default function MonitorView({ orders }) {
-  const byStatus = (status) => orders.filter(o => o.status === status);
-  const sortByTime = (a, b) => (b.createdAt || 0) - (a.createdAt || 0);
+  const columns = useMemo(() => COLUMNS_CONFIG.map(col => ({
+    ...col,
+    items: orders
+      .filter(o => o.status === col.key)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)),
+  })), [orders]);
 
   return (
     <div className="monitor-page">
       <div className="monitor-layout">
-      {COLUMNS_CONFIG.map((col, i) => {
-        const items = byStatus(col.key).sort(sortByTime);
-        return (
-          <React.Fragment key={col.key}>
-            {i > 0 && <div className="monitor-sep" />}
-            <div className="monitor-col">
-              <div className="monitor-col-header" style={{ borderColor: col.border }}>
-                <h2 style={{ color: col.color }}>{col.title} <span className="monitor-count" style={{ background: `${col.border}22`, color: col.color }}>{items.length}</span></h2>
-              </div>
-              <div className="monitor-col-body">
-                {items.length === 0
-                  ? <div className="monitor-empty">—</div>
-                  : items.map(order => (
-                      <div key={order.id} className="monitor-card">
-                        <div className="monitor-num">{fmtOrderNumber(order.number)}</div>
-                        {order.customer && <div className="monitor-ref">{order.customer}</div>}
-                      </div>
-                    ))}
-              </div>
+      {columns.map((col, i) => (
+        <React.Fragment key={col.key}>
+          {i > 0 && <div className="monitor-sep" />}
+          <div className="monitor-col">
+            <div className="monitor-col-header" style={{ borderColor: col.border }}>
+              <h2 style={{ color: col.color }}>{col.title} <span className="monitor-count" style={{ background: `${col.border}22`, color: col.color }}>{col.items.length}</span></h2>
             </div>
-          </React.Fragment>
-        );
-      })}
+            <div className="monitor-col-body">
+              {col.items.length === 0
+                ? <div className="monitor-empty">—</div>
+                : col.items.map(order => (
+                    <div key={order.id} className="monitor-card">
+                      <div className="monitor-num">{fmtOrderNumber(order.number)}</div>
+                      {order.customer && <div className="monitor-ref">{order.customer}</div>}
+                    </div>
+                  ))}
+            </div>
+          </div>
+        </React.Fragment>
+      ))}
       </div>
     </div>
   );

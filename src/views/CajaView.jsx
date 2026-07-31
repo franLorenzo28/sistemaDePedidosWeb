@@ -1,22 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import CompactOrder from '../components/CompactOrder.jsx';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
+import SoldOutManager from '../components/SoldOutManager.jsx';
 import { nextNumber, timeAgo, fmtOrderNumber } from '../lib/utils.js';
-import { showToast } from '../hooks/useOrders.js';
-
-const PANCHO_OPTIONS = ['Pancho clásico', 'Pancho completo'];
-const HAMBURGUESA_OPTIONS = ['Hamburguesa clásica', 'Hamburguesa completa', 'Hamburguesa veggie'];
-const PANCHO_INGREDIENTS = ['Mayonesa', 'Ketchup', 'Mostaza', 'Papas pay', 'Sin gustos'];
-const HAMBURGUESA_INGREDIENTS = ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup', 'Mostaza', 'Sin gustos'];
-const PIZZA_FLAVORS = [
-  { value: 'Caprese', label: 'Caprese', sub: 'albahaca y tomate' },
-  { value: 'Panceta', label: 'Panceta' },
-  { value: 'Huevo', label: 'Huevo' },
-  { value: 'Aceitunas', label: 'Aceitunas' },
-  { value: 'Peperoni', label: 'Peperoni' },
-  { value: 'Sin gustos', label: 'Sin gustos' },
-  { value: 'Sin muzzarella', label: 'Sin muzzarella' },
-];
+import { createOrderId } from '../lib/constants.js';
+import { showToast } from '../lib/toast.js';
+import { useSoldOut } from '../hooks/useSoldOut.js';
+import { PANCHO_OPTIONS, PANCHO_INGREDIENTS, HAMBURGUESA_OPTIONS, HAMBURGUESA_INGREDIENTS, PIZZA_FLAVORS, productId } from '../lib/catalog.js';
 
 const TABS = [
   { key: 'Panchos', icon: '🌭', label: 'Panchos' },
@@ -71,11 +62,26 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
   const [customer, setCustomer] = useState('');
   const [notes, setNotes] = useState('');
   const [manualNumber, setManualNumber] = useState(nextNumber(orders));
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [showSoldOut, setShowSoldOut] = useState(false);
+  const { soldOut, toggleSoldOut, isSoldOut } = useSoldOut();
   const formRef = useRef(null);
 
-  const cooking = orders.filter(o => o.status !== 'entregado' && o.status !== 'listo').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-  const listos = orders.filter(o => o.status === 'listo').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-  const entregados = orders.filter(o => o.status === 'entregado').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 10);
+  const cooking = useMemo(() => orders
+    .filter(o => o.status !== 'entregado' && o.status !== 'listo' && o.status !== 'cancelado')
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)), [orders]);
+  const listos = useMemo(() => orders
+    .filter(o => o.status === 'listo')
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)), [orders]);
+  const entregados = useMemo(() => orders
+    .filter(o => o.status === 'entregado')
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .slice(0, 10), [orders]);
+  const cancelados = useMemo(() => orders
+    .filter(o => o.status === 'cancelado')
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .slice(0, 10), [orders]);
 
   const addDraftItem = (type, name, quantity, detail, pizzaStatus) => {
     setDraft(prev => [...prev, { type, name, quantity, detail, status: pizzaStatus || 'pendiente' }]);
@@ -84,24 +90,31 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
     const items = draft.map(d => {
       const station = d.type === 'Panchos' ? 'panchos' : d.type === 'Hamburguesas' ? 'hamburguesas' : 'pizzas';
       return { station, name: d.name, quantity: d.quantity, detail: d.detail, status: d.status || 'pendiente' };
     });
     if (!items.length) return showToast('Agregá al menos un producto.');
-    const order = { id: `local-${Date.now()}`, number: Number(manualNumber), customer: customer.trim(), notes: notes.trim(), items, status: 'pendiente', createdAt: Date.now() };
-    await addOrder(order);
-    showToast(`Pedido ${fmtOrderNumber(order.number)} enviado a cocina.`);
-    setDraft([]);
-    setCustomer('');
-    setNotes('');
+    const order = { id: createOrderId(), number: Number(manualNumber), customer: customer.trim(), notes: notes.trim(), items, status: 'pendiente', createdAt: Date.now() };
+    setSubmitting(true);
+    try {
+      await addOrder(order);
+      showToast(`Pedido ${fmtOrderNumber(order.number)} enviado a cocina.`);
+      setDraft([]);
+      setCustomer('');
+      setNotes('');
+      setManualNumber(nextNumber([...orders, order]));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'Panchos': return <PanchoSection onAdd={addDraftItem} />;
-      case 'Hamburguesas': return <HamburguesaSection onAdd={addDraftItem} />;
-      case 'Pizzas': return <PizzaSection onAdd={addDraftItem} />;
+      case 'Panchos': return <PanchoSection onAdd={addDraftItem} isSoldOut={isSoldOut} />;
+      case 'Hamburguesas': return <HamburguesaSection onAdd={addDraftItem} isSoldOut={isSoldOut} />;
+      case 'Pizzas': return <PizzaSection onAdd={addDraftItem} isSoldOut={isSoldOut} />;
       default: return null;
     }
   };
@@ -112,8 +125,10 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
         <div style={{ flex: 1 }}>
           <PageHeader title="Nuevo pedido" subtitle="Cargá los detalles y cada sector recibirá lo que le corresponde." section="caja" />
         </div>
-        <button className="btn btn-ghost" style={{ fontSize: '.72rem', padding: '4px 10px', whiteSpace: 'nowrap' }}
-          onClick={() => { if (confirm('¿Resetear todos los pedidos? Se perderán todos los datos.')) onClearAll(); }}>
+        <button className="btn btn-ghost" style={{ fontSize: '.72rem', padding: '4px 10px', whiteSpace: 'nowrap' }} onClick={() => setShowSoldOut(true)}>
+          📦 Agotados
+        </button>
+        <button className="btn btn-ghost" style={{ fontSize: '.72rem', padding: '4px 10px', whiteSpace: 'nowrap' }} onClick={() => setConfirmClear(true)}>
           🗑️ Resetear
         </button>
       </div>
@@ -164,7 +179,9 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
             <label className="field-label">Notas generales</label>
             <textarea placeholder="Ej: entregar todo junto" value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
-          <button className="btn btn-secondary full" type="submit">Enviar pedido a cocina</button>
+          <button className="btn btn-secondary full" type="submit" disabled={submitting}>
+            {submitting ? 'Enviando…' : 'Enviar pedido a cocina'}
+          </button>
         </form>
 
         <section className="caja-sidebar">
@@ -204,15 +221,39 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
               ) : (
                 <div className="empty">No hay entregados.</div>
               )}
+              <h2 className="cancelados-title">Cancelados</h2>
+              {cancelados.length > 0 ? (
+                <div className="delivered-list">
+                  {cancelados.map(o => (
+                    <div key={o.id} className="delivered-item delivered-cancelado">
+                      <span className="delivered-number">Pedido #{o.number}</span>
+                      <span className="delivered-customer">{o.customer ? `Referencia: ${o.customer}` : 'Sin nombre'}</span>
+                      <span className="delivered-time">{timeAgo(o.createdAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty">No hay cancelados.</div>
+              )}
             </div>
           </div>
         </section>
       </div>
+      <ConfirmDialog
+        open={confirmClear}
+        title="Resetear todos los pedidos"
+        message="¿Seguro que querés eliminar todos los pedidos? Se perderán todos los datos y no se puede deshacer."
+        confirmLabel="Sí, resetear"
+        danger
+        onConfirm={() => { setConfirmClear(false); onClearAll(); }}
+        onCancel={() => setConfirmClear(false)}
+      />
+      {showSoldOut && <SoldOutManager soldOut={soldOut} onToggle={toggleSoldOut} onClose={() => setShowSoldOut(false)} />}
     </>
   );
 }
 
-function PanchoSection({ onAdd }) {
+function PanchoSection({ onAdd, isSoldOut }) {
   const [product, setProduct] = useState(PANCHO_OPTIONS[0]);
   const [qty, setQty] = useState('1');
   const [ingredients, setIngredients] = useState([]);
@@ -228,6 +269,7 @@ function PanchoSection({ onAdd }) {
   };
 
   const handleAdd = () => {
+    if (isSoldOut(productId('panchos', product))) return showToast('Producto agotado.');
     const detail = [...ingredients, extra.trim()].filter(Boolean).join(', ');
     onAdd('Panchos', product, Number(qty) || 1, detail);
     setIngredients([]);
@@ -241,7 +283,10 @@ function PanchoSection({ onAdd }) {
         <div>
           <label className="field-label">Producto</label>
           <select value={product} onChange={e => handleProductChange(e.target.value)}>
-            {PANCHO_OPTIONS.map(o => <option key={o}>{o}</option>)}
+            {PANCHO_OPTIONS.map(o => {
+              const sold = isSoldOut(productId('panchos', o));
+              return <option key={o} value={o} disabled={sold}>{o}{sold ? ' (Agotado)' : ''}</option>;
+            })}
           </select>
         </div>
         <div className="quantity-control">
@@ -259,7 +304,7 @@ function PanchoSection({ onAdd }) {
   );
 }
 
-function HamburguesaSection({ onAdd }) {
+function HamburguesaSection({ onAdd, isSoldOut }) {
   const [product, setProduct] = useState(HAMBURGUESA_OPTIONS[0]);
   const [qty, setQty] = useState('1');
   const [ingredients, setIngredients] = useState([]);
@@ -269,14 +314,13 @@ function HamburguesaSection({ onAdd }) {
     setProduct(val);
     if (val.toLowerCase().includes('completa')) {
       setIngredients(HAMBURGUESA_INGREDIENTS.filter(i => ['Tomate', 'Lechuga', 'Mayonesa', 'Ketchup'].includes(i)));
-    } else if (val.toLowerCase().includes('queso')) {
-      setIngredients([]);
     } else {
       setIngredients([]);
     }
   };
 
   const handleAdd = () => {
+    if (isSoldOut(productId('hamburguesas', product))) return showToast('Producto agotado.');
     const detail = [...ingredients, extra.trim()].filter(Boolean).join(', ');
     onAdd('Hamburguesas', product, Number(qty) || 1, detail);
     setIngredients([]);
@@ -290,7 +334,10 @@ function HamburguesaSection({ onAdd }) {
         <div>
           <label className="field-label">Producto</label>
           <select value={product} onChange={e => handleProductChange(e.target.value)}>
-            {HAMBURGUESA_OPTIONS.map(o => <option key={o}>{o}</option>)}
+            {HAMBURGUESA_OPTIONS.map(o => {
+              const sold = isSoldOut(productId('hamburguesas', o));
+              return <option key={o} value={o} disabled={sold}>{o}{sold ? ' (Agotado)' : ''}</option>;
+            })}
           </select>
         </div>
         <div className="quantity-control">
@@ -310,13 +357,14 @@ function HamburguesaSection({ onAdd }) {
 
 const PIZZA_TYPE_OPTIONS = ['Porción', 'Pizza entera'];
 
-function PizzaSection({ onAdd }) {
+function PizzaSection({ onAdd, isSoldOut }) {
   const [type, setType] = useState(PIZZA_TYPE_OPTIONS[0]);
   const [flavors, setFlavors] = useState([]);
   const [qty, setQty] = useState('1');
   const [extra, setExtra] = useState('');
 
   const toggleFlavor = (val) => {
+    if (isSoldOut(productId('pizzas', val))) return showToast('Sabor agotado.');
     setFlavors(prev => {
       const next = prev.includes(val) ? prev.filter(f => f !== val) : [...prev, val];
       const baseFlavors = next.filter(f => f !== 'Sin muzzarella');
@@ -364,16 +412,19 @@ function PizzaSection({ onAdd }) {
         <div className="detail-control">
           <label className="field-label">Sabores</label>
           <div className="ingredient-grid">
-            {PIZZA_FLAVORS.map(f => (
-              <div key={f.value} className="choice">
-                <input id={`pizza-${f.value}`} type="checkbox" value={f.value}
-                  checked={flavors.includes(f.value)} onChange={() => toggleFlavor(f.value)} />
-                <label htmlFor={`pizza-${f.value}`} className="pizza-flavor-label">
-                  <span>{f.label}</span>
-                  {f.sub && <span className="pizza-flavor-sub">{f.sub}</span>}
-                </label>
-              </div>
-            ))}
+            {PIZZA_FLAVORS.map(f => {
+              const sold = isSoldOut(productId('pizzas', f.value));
+              return (
+                <div key={f.value} className={`choice ${sold ? 'agotado' : ''}`}>
+                  <input id={`pizza-${f.value}`} type="checkbox" value={f.value}
+                    checked={flavors.includes(f.value)} disabled={sold} onChange={() => toggleFlavor(f.value)} />
+                  <label htmlFor={`pizza-${f.value}`} className="pizza-flavor-label">
+                    <span>{f.label}</span>
+                    {f.sub && <span className="pizza-flavor-sub">{f.sub}</span>}
+                  </label>
+                </div>
+              );
+            })}
           </div>
           <input placeholder="Detalle extra" value={extra} onChange={e => setExtra(e.target.value)} />
         </div>

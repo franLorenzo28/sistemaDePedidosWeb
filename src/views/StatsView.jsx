@@ -1,32 +1,35 @@
+import { useMemo } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import { STATION_LABELS, STATION_ICONS } from '../lib/utils.js';
 
 export default function StatsView({ orders }) {
-  const entregados = orders.filter(o => o.status === 'entregado');
+  const entregados = useMemo(() => orders.filter(o => o.status === 'entregado'), [orders]);
 
-  const products = ['panchos', 'hamburguesas', 'pizzas'];
-  const stats = products.map(station => {
-    const items = entregados.flatMap(o =>
-      o.items.filter(item => item.station === station)
-    );
-    const totalItems = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
-    const totalOrders = entregados.filter(o =>
-      o.items.some(item => item.station === station)
-    ).length;
+  const stats = useMemo(() => {
+    const products = ['panchos', 'hamburguesas', 'pizzas'];
+    return products.map(station => {
+      const items = entregados.flatMap(o =>
+        o.items.filter(item => item.station === station)
+      );
+      const totalItems = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
+      const totalOrders = entregados.filter(o =>
+        o.items.some(item => item.station === station)
+      ).length;
 
-    const grouped = {};
-    items.forEach(item => {
-      const name = item.name;
-      grouped[name] = (grouped[name] || 0) + (Number(item.quantity) || 0);
+      const grouped = {};
+      items.forEach(item => {
+        const name = item.name;
+        grouped[name] = (grouped[name] || 0) + (Number(item.quantity) || 0);
+      });
+      const top = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+      return { station, label: STATION_LABELS[station], icon: STATION_ICONS[station], totalItems, totalOrders, top };
     });
-    const top = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-    return { station, label: STATION_LABELS[station], icon: STATION_ICONS[station], totalItems, totalOrders, top };
-  });
+  }, [entregados]);
 
   const totalEntregados = entregados.length;
-  const totalItems = entregados.reduce((sum, o) =>
-    sum + o.items.reduce((s, i) => s + (Number(i.quantity) || 0), 0), 0);
+  const totalItems = useMemo(() => entregados.reduce((sum, o) =>
+    sum + o.items.reduce((s, i) => s + (Number(i.quantity) || 0), 0), 0), [entregados]);
 
   return (
     <>

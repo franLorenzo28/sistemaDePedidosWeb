@@ -1,6 +1,8 @@
+import { memo, useState } from 'react';
 import { timeAgo, statusLabel, relevantItems, STATION_ICONS, STATION_LABELS, fmtOrderNumber } from '../lib/utils.js';
+import ConfirmDialog from './ConfirmDialog.jsx';
 
-export default function OrderCard({ order, station, onAction, onAssign }) {
+function OrderCard({ order, station, onAction, onAssign }) {
   const items = relevantItems(order, station);
   const otherItems = station ? order.items.filter(item => item.station !== station) : [];
   const currentStatus = station
@@ -16,50 +18,78 @@ export default function OrderCard({ order, station, onAction, onAssign }) {
   const totalQty = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
   const assignedName = items.find(i => i.assignedTo)?.assignedTo;
 
+  const [busy, setBusy] = useState(false);
+  const [confirmDelivery, setConfirmDelivery] = useState(false);
+
   const otherStationsText = otherItems.length > 0
     ? [...new Set(otherItems.map(i => STATION_LABELS[i.station] || i.station))].join(', ')
     : null;
 
+  const runAction = async (target) => {
+    if (busy) return;
+    setBusy(true);
+    try { await onAction(order.id, target, station || null); } finally { setBusy(false); }
+  };
+
+  const handleAction = () => {
+    if (busy) return;
+    if (next === 'entregado') { setConfirmDelivery(true); return; }
+    runAction(next);
+  };
+
   return (
-    <article className={`order-card status-${currentStatus}`}>
-      <div className="order-head">
-        <div>
-          <span className="order-number">Pedido #{fmtOrderNumber(order.number)}</span>
-          <span className="order-qty"> ×{totalQty}</span>
-          <span className="time"> · {timeAgo(order.createdAt)}</span>
-        </div>
-        <div className="order-head-right">
-          {order.customer && <span className="order-customer">Ref: {order.customer}</span>}
-          {assignedName && <span className="order-assigned">Asignado: {assignedName}</span>}
-          <span className={`badge ${currentStatus}`}>{statusLabel(currentStatus)}</span>
-        </div>
-      </div>
-      <div className="order-items">
-        {items.map((item, i) => (
-          <div key={i} className="item-line">
-            {stationIcon && <span className="item-icon">{stationIcon}</span>}
-            <span className="item-qty">{item.quantity}×</span>
-            <span className="item-name">{item.name}</span>
-            {item.detail && <span className="item-detail">{item.detail}</span>}
+    <>
+      <article className={`order-card status-${currentStatus}`}>
+        <div className="order-head">
+          <div>
+            <span className="order-number">Pedido #{fmtOrderNumber(order.number)}</span>
+            <span className="order-qty"> ×{totalQty}</span>
+            <span className="time"> · {timeAgo(order.createdAt)}</span>
           </div>
-        ))}
-      </div>
-      {otherStationsText && (
-        <div className="order-other-stations">
-          🔗 Incluye también {otherStationsText}
+          <div className="order-head-right">
+            {order.customer && <span className="order-customer">Ref: {order.customer}</span>}
+            {assignedName && <span className="order-assigned">Asignado: {assignedName}</span>}
+            <span className={`badge ${currentStatus}`}>{statusLabel(currentStatus)}</span>
+          </div>
         </div>
-      )}
-      {order.notes && <p className="order-notes">📝 {order.notes}</p>}
-      {!assignedName && onAssign && (
-        <button className="btn btn-ghost order-action-btn" onClick={() => onAssign(order.id, station)}>
-          👤 Asignarme pedido
-        </button>
-      )}
-      {next && (
-        <button className={`btn ${actionClass} order-action-btn`} onClick={() => onAction(order.id, next, station || null)}>
-          {actionLabel}
-        </button>
-      )}
-    </article>
+        <div className="order-items">
+          {items.map((item, i) => (
+            <div key={i} className="item-line">
+              {stationIcon && <span className="item-icon">{stationIcon}</span>}
+              <span className="item-qty">{item.quantity}×</span>
+              <span className="item-name">{item.name}</span>
+              {item.detail && <span className="item-detail">{item.detail}</span>}
+            </div>
+          ))}
+        </div>
+        {otherStationsText && (
+          <div className="order-other-stations">
+            🔗 Incluye también {otherStationsText}
+          </div>
+        )}
+        {order.notes && <p className="order-notes">📝 {order.notes}</p>}
+        {!assignedName && onAssign && (
+          <button className="btn btn-ghost order-action-btn" onClick={() => onAssign(order.id, station)}>
+            👤 Asignarme pedido
+          </button>
+        )}
+        {next && (
+          <button className={`btn ${actionClass} order-action-btn`} onClick={handleAction} disabled={busy}>
+            {busy ? 'Procesando…' : actionLabel}
+          </button>
+        )}
+      </article>
+      <ConfirmDialog
+        open={confirmDelivery}
+        title="Entregar pedido"
+        message={`¿Confirmás la entrega del pedido #${fmtOrderNumber(order.number)}?`}
+        confirmLabel="Entregar"
+        busy={busy}
+        onConfirm={() => { setConfirmDelivery(false); runAction('entregado'); }}
+        onCancel={() => setConfirmDelivery(false)}
+      />
+    </>
   );
 }
+
+export default memo(OrderCard);

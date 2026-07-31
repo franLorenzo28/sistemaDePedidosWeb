@@ -1,6 +1,14 @@
 import { useState } from 'react';
 
-export default function Topbar({ view, onNavigate, items, leftItems, soundEnabled, onToggleSound, userName, darkMode, onToggleDark }) {
+const CONNECTION_LABELS = {
+  connected: 'En línea',
+  connecting: 'Conectando…',
+  reconnecting: 'Reconectando…',
+  offline: 'Sin conexión',
+  local: 'Modo local',
+};
+
+export default function Topbar({ view, onNavigate, items, leftItems, soundEnabled, onToggleSound, userName, darkMode, onToggleDark, connection }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleNav = (key) => {
@@ -28,6 +36,12 @@ export default function Topbar({ view, onNavigate, items, leftItems, soundEnable
         ))}
       </nav>
       <div className="topbar-right">
+        {connection && (
+          <span className={`conn-badge ${connection}`} title={CONNECTION_LABELS[connection] || connection}>
+            <span className="conn-dot" />
+            {CONNECTION_LABELS[connection] || connection}
+          </span>
+        )}
         {userName && <span className="topbar-user">👤 {userName}</span>}
         <button className="icon-btn sound-toggle" onClick={onToggleSound} title={soundEnabled ? 'Sonido activado' : 'Sonido desactivado'}>{soundEnabled ? '🔊' : '🔇'}</button>
         <button className="hamburger-toggle" onClick={() => setMenuOpen(prev => !prev)} aria-label="Menú">

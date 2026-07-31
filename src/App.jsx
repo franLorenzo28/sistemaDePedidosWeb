@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useOrders, showToast } from './hooks/useOrders.js';
+import { useOrders } from './hooks/useOrders.js';
+import { showToast } from './lib/toast.js';
+import { STATIONS, STATION_ICONS, NAV_ITEMS, LEFT_NAV_ITEMS } from './lib/constants.js';
 import Topbar from './components/Topbar.jsx';
 import CajaView from './views/CajaView.jsx';
 import StationView from './views/StationView.jsx';
@@ -7,12 +9,6 @@ import EntregaView from './views/EntregaView.jsx';
 import StatsView from './views/StatsView.jsx';
 import MonitorView from './views/MonitorView.jsx';
 import EditModal from './components/EditModal.jsx';
-
-const STATIONS = ['panchos', 'hamburguesas', 'pizzas'];
-const STATION_ICONS = { panchos: '🌭', hamburguesas: '🍔', pizzas: '🍕' };
-
-const NAV_ITEMS = [['caja', 'Caja'], ['panchos', 'Panchos'], ['hamburguesas', 'Hamburguesas'], ['pizzas', 'Pizzas'], ['entrega', 'Entrega']];
-const LEFT_NAV_ITEMS = [['monitor', 'Monitor'], ['estadisticas', '📊 Stats']];
 
 function loadName() {
   try { return localStorage.getItem('lobabi-user-name') || ''; } catch { return ''; }
@@ -35,7 +31,7 @@ function playAlertSound() {
 }
 
 export default function App() {
-  const { orders, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, clearAllOrders, toggleSound, soundEnabled } = useOrders();
+  const { orders, loaded, connection, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, clearAllOrders, refreshOrders, toggleSound, soundEnabled } = useOrders();
   const [view, setView] = useState(() => new URLSearchParams(location.search).get('vista') || 'caja');
   const [editingOrder, setEditingOrder] = useState(null);
   const [popupOrder, setPopupOrder] = useState(null);
@@ -83,29 +79,38 @@ export default function App() {
     return () => window.removeEventListener('new-order-popup', handleNewOrder);
   }, [handleNewOrder]);
 
-  const navigate = (vista) => {
+  const navigate = useCallback((vista) => {
     history.pushState(null, '', `?vista=${vista}`);
     setView(vista);
-  };
+  }, []);
 
-  const handleEdit = (id) => {
+  const handleEdit = useCallback((id) => {
     const order = orders.find(o => o.id === id);
     if (order) setEditingOrder(order);
-  };
+  }, [orders]);
 
-  const handleSaveEdit = async (updatedOrder) => {
+  const handleSaveEdit = useCallback(async (updatedOrder) => {
     await saveEditedOrder(updatedOrder);
     setEditingOrder(null);
     showToast(`Pedido ${updatedOrder.number} actualizado.`);
-  };
+  }, [saveEditedOrder]);
 
-  const handleUpdateOrder = (id, status, station) => {
-    updateOrder(id, status, station, userName);
-  };
+  const handleUpdateOrder = useCallback((id, status, station) => {
+    return updateOrder(id, status, station, userName);
+  }, [updateOrder, userName]);
 
-  const handleAssign = (id, station) => {
-    assignItems(id, station, userName);
-  };
+  const handleAssign = useCallback((id, station) => {
+    return assignItems(id, station, userName);
+  }, [assignItems, userName]);
+
+  const handleDelete = useCallback((id) => {
+    return deleteOrder(id);
+  }, [deleteOrder]);
+
+  const handleClearAll = useCallback(() => {
+    clearAllOrders();
+    showToast('Todos los pedidos fueron eliminados.');
+  }, [clearAllOrders]);
 
   const stationItems = popupOrder ? popupOrder.items.filter(item => STATIONS.includes(item.station)) : [];
 
@@ -131,11 +136,15 @@ export default function App() {
     );
   }
 
+  if (!loaded && connection !== 'local') {
+    return <LoadingScreen connection={connection} onRetry={refreshOrders} />;
+  }
+
   return (
     <>
-      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} leftItems={LEFT_NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} userName={userName} darkMode={darkMode} onToggleDark={toggleDark} />
+      <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} leftItems={LEFT_NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} userName={userName} darkMode={darkMode} onToggleDark={toggleDark} connection={connection} />
       <main className="app-shell">
-        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={handleUpdateOrder} onDelete={deleteOrder} onClearAll={clearAllOrders} onAssign={handleAssign} />}
+        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={handleUpdateOrder} onDelete={handleDelete} onClearAll={handleClearAll} onAssign={handleAssign} />}
         {view === 'monitor' && <MonitorView orders={orders} />}
         {view === 'entrega' && <EntregaView orders={orders} onUpdate={handleUpdateOrder} />}
         {view === 'estadisticas' && <StatsView orders={orders} />}
@@ -164,5 +173,20 @@ export default function App() {
         </div>
       )}
     </>
+  );
+}
+
+function LoadingScreen({ connection, onRetry }) {
+  const messages = {
+    connecting: 'Cargando pedidos…',
+    reconnecting: 'Sin conexión con el servidor. Reconectando…',
+    offline: 'Estás sin conexión. Reintentá cuando vuelvas.',
+  };
+  return (
+    <div className="app-loading">
+      <div className="loader" />
+      <p>{messages[connection] || messages.connecting}</p>
+      <button className="btn btn-secondary" onClick={onRetry} disabled={connection === 'connecting'}>Reintentar</button>
+    </div>
   );
 }

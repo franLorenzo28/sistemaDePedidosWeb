@@ -10,13 +10,20 @@ export default function EditModal({ order, onSave, onClose }) {
   const [newName, setNewName] = useState('');
   const [newQty, setNewQty] = useState('1');
   const [newDetail, setNewDetail] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     const updatedItems = items
       .filter(item => !item.delete)
       .map(item => ({ station: item.station, name: item.name, quantity: item.quantity, detail: item.detail, status: item.status }));
-    onSave({ ...order, customer: customer.trim(), notes: notes.trim(), items: updatedItems });
+    setSaving(true);
+    try {
+      await onSave({ ...order, customer: customer.trim(), notes: notes.trim(), items: updatedItems });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateItem = (index, field, value) => {
@@ -90,8 +97,8 @@ export default function EditModal({ order, onSave, onClose }) {
         <label className="field-label">Notas generales</label>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} />
         <div className="modal-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button type="submit" className="btn btn-secondary">Guardar cambios</button>
+          <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>Cancelar</button>
+          <button type="submit" className="btn btn-secondary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar cambios'}</button>
         </div>
       </form>
     </div>

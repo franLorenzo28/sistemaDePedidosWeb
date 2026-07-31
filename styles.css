@@ -84,6 +84,7 @@ textarea { min-height: 50px; resize: vertical; }
 .badge.preparando { color: #1e3a5f; background: #bfdbfe; }
 .badge.listo { color: #14532d; background: #bbf7d0; }
 .badge.entregado { color: #1e3a5f; background: #e0e7ff; }
+.badge.cancelado { color: #7f1d1d; background: #fecaca; }
 .item-line { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: .88rem; flex-wrap: wrap; }
 .item-line:last-child { border-bottom: 0; }
 .item-icon { font-size: 1rem; flex-shrink: 0; }
@@ -178,6 +179,10 @@ textarea { min-height: 50px; resize: vertical; }
 .compact-actions { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
 .compact-action-btn { padding: 10px 12px; font-size: .78rem; min-height: 44px; font-weight: 800; flex: 1; text-align: center; }
 .compact-delete-btn { color: var(--red); border: 1px solid #fecaca; }
+.compact-cancel-btn { color: var(--red); border: 1px solid #fecaca; }
+.cancelados-title { margin-top: 14px !important; }
+.delivered-cancelado .delivered-number { color: var(--red); }
+.delivered-cancelado { opacity: .75; }
 .delete-confirm { display: flex; gap: 4px; flex: 1; }
 .delete-confirm .btn { min-height: 50px; font-size: .76rem; padding: 8px 10px; }
 .icon-btn { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 6px; background: transparent; transition: background .12s; }
@@ -584,4 +589,69 @@ textarea { min-height: 50px; resize: vertical; }
 [data-theme="dark"] .topbar-user {
   color: #94a3b8;
 }
+
+/* Connection indicator */
+.conn-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 99px;
+  font-size: .66rem; font-weight: 900; text-transform: uppercase; letter-spacing: .04em;
+  background: rgba(255,255,255,.12); color: white;
+  white-space: nowrap; flex-shrink: 0;
+}
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
+.conn-badge.connected .conn-dot { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+.conn-badge.reconnecting .conn-dot { background: #fbbf24; animation: pulse-glow 1.2s ease-in-out infinite; }
+.conn-badge.offline .conn-dot { background: #f87171; }
+.conn-badge.local .conn-dot { background: #94a3b8; }
+
+/* Disabled buttons / inputs */
+.btn:disabled, .btn[disabled] { opacity: .5; cursor: default; transform: none !important; filter: none !important; }
+input:disabled, select:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Confirmation dialog */
+.confirm-dialog { max-width: 420px; padding: 20px 22px; }
+.confirm-dialog h2 { margin: 0 0 8px; font-size: 1.05rem; }
+.confirm-dialog p { margin: 0 0 16px; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+
+/* Sold out manager */
+.soldout-modal { max-width: 560px; }
+.soldout-sub { margin: 0 0 14px; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+.soldout-group { margin-bottom: 14px; }
+.soldout-group h3 { margin: 0 0 8px; font-size: .92rem; }
+.soldout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.soldout-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: white; cursor: pointer; font-size: .8rem;
+  transition: border-color .12s, background .12s;
+}
+.soldout-item:hover { border-color: var(--green-700); }
+.soldout-item input { width: auto; margin: 0; min-height: auto; }
+.soldout-item.agotado { background: #fef2f2; border-color: #fecaca; }
+.soldout-name { font-weight: 800; min-width: 0; }
+.soldout-state { margin-left: auto; font-size: .62rem; font-weight: 900; text-transform: uppercase; color: var(--green-700); white-space: nowrap; }
+.soldout-item.agotado .soldout-state { color: var(--red); }
+
+/* Sold out product state in the form */
+.choice.agotado input:disabled { opacity: 0; }
+.choice.agotado label { opacity: .5; border-style: dashed; color: var(--muted); cursor: not-allowed; }
+.choice.agotado input:checked + label { box-shadow: none; }
+
+[data-theme="dark"] .soldout-item { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .soldout-item.agotado { background: #3b1f1f; border-color: #7f1d1d; }
+
+/* Loading screen */
+.app-loading {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  background: var(--cream);
+}
+.app-loading .loader {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 4px solid var(--green-100); border-top-color: var(--green-700);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.app-loading p { margin: 0; color: var(--muted); font-size: .9rem; font-weight: 700; }
+
 
