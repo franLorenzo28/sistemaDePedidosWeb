@@ -1,5 +1,5 @@
 export const INITIAL_STOCK = {
-  panchos: 80,
+  panchos: 96,
   hamburguesas: { clasicas: 90, veggie: 10 },
   pizzas: 80,
 };
