@@ -31,7 +31,7 @@ function playAlertSound() {
 }
 
 export default function App() {
-  const { orders, loaded, connection, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, clearAllOrders, refreshOrders, toggleSound, soundEnabled } = useOrders();
+  const { orders, loaded, connection, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, refreshOrders, toggleSound, soundEnabled } = useOrders();
   const [view, setView] = useState(() => new URLSearchParams(location.search).get('vista') || 'caja');
   const [editingOrder, setEditingOrder] = useState(null);
   const [popupOrder, setPopupOrder] = useState(null);
@@ -107,11 +107,6 @@ export default function App() {
     return deleteOrder(id);
   }, [deleteOrder]);
 
-  const handleClearAll = useCallback(() => {
-    clearAllOrders();
-    showToast('Todos los pedidos fueron eliminados.');
-  }, [clearAllOrders]);
-
   const stationItems = popupOrder ? popupOrder.items.filter(item => STATIONS.includes(item.station)) : [];
 
   const handleConfirmName = (e) => {
@@ -144,7 +139,7 @@ export default function App() {
     <>
       <Topbar view={view} onNavigate={navigate} items={NAV_ITEMS} leftItems={LEFT_NAV_ITEMS} soundEnabled={soundEnabled} onToggleSound={toggleSound} userName={userName} darkMode={darkMode} onToggleDark={toggleDark} connection={connection} />
       <main className="app-shell">
-        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={handleUpdateOrder} onDelete={handleDelete} onClearAll={handleClearAll} onAssign={handleAssign} />}
+        {view === 'caja' && <CajaView orders={orders} addOrder={addOrder} onEdit={handleEdit} onUpdate={handleUpdateOrder} onDelete={handleDelete} onAssign={handleAssign} />}
         {view === 'monitor' && <MonitorView orders={orders} />}
         {view === 'entrega' && <EntregaView orders={orders} onUpdate={handleUpdateOrder} />}
         {view === 'estadisticas' && <StatsView orders={orders} />}

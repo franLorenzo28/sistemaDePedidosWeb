@@ -1,7 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import CompactOrder from '../components/CompactOrder.jsx';
-import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import SoldOutManager from '../components/SoldOutManager.jsx';
 import { nextNumber, timeAgo, fmtOrderNumber } from '../lib/utils.js';
 import { createOrderId } from '../lib/constants.js';
@@ -56,14 +55,13 @@ function IngredientGrid({ id, ingredients, checked, onChange }) {
   );
 }
 
-export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete, onClearAll, onAssign }) {
+export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete, onAssign }) {
   const [activeTab, setActiveTab] = useState('Panchos');
   const [draft, setDraft] = useState([]);
   const [customer, setCustomer] = useState('');
   const [notes, setNotes] = useState('');
   const [manualNumber, setManualNumber] = useState(nextNumber(orders));
   const [submitting, setSubmitting] = useState(false);
-  const [confirmClear, setConfirmClear] = useState(false);
   const [showSoldOut, setShowSoldOut] = useState(false);
   const { soldOut, toggleSoldOut, isSoldOut } = useSoldOut();
   const formRef = useRef(null);
@@ -127,9 +125,6 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
         </div>
         <button className="btn btn-ghost" style={{ fontSize: '.72rem', padding: '4px 10px', whiteSpace: 'nowrap' }} onClick={() => setShowSoldOut(true)}>
           📦 Agotados
-        </button>
-        <button className="btn btn-ghost" style={{ fontSize: '.72rem', padding: '4px 10px', whiteSpace: 'nowrap' }} onClick={() => setConfirmClear(true)}>
-          🗑️ Resetear
         </button>
       </div>
       <div className="layout caja-layout">
@@ -239,15 +234,6 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
           </div>
         </section>
       </div>
-      <ConfirmDialog
-        open={confirmClear}
-        title="Resetear todos los pedidos"
-        message="¿Seguro que querés eliminar todos los pedidos? Se perderán todos los datos y no se puede deshacer."
-        confirmLabel="Sí, resetear"
-        danger
-        onConfirm={() => { setConfirmClear(false); onClearAll(); }}
-        onCancel={() => setConfirmClear(false)}
-      />
       {showSoldOut && <SoldOutManager soldOut={soldOut} onToggle={toggleSoldOut} onClose={() => setShowSoldOut(false)} />}
     </>
   );

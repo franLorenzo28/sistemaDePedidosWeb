@@ -293,15 +293,5 @@ export function useOrders() {
     return true;
   }, [setAllOrders]);
 
-  const clearAllOrders = useCallback(async () => {
-    setAllOrders([]);
-    if (supabaseReady) {
-      const supabase = getSupabase();
-      if (!supabase) return;
-      const { error } = await supabase.from('orders').delete().neq('id', '');
-      if (error) { showToast(`Supabase: ${error.message}`); return; }
-    }
-  }, [setAllOrders]);
-
-  return { orders, loaded, connection, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, clearAllOrders, refreshOrders, toggleSound, soundEnabled };
+  return { orders, loaded, connection, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, refreshOrders, toggleSound, soundEnabled };
 }
