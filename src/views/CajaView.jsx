@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import CompactOrder from '../components/CompactOrder.jsx';
 import SoldOutManager from '../components/SoldOutManager.jsx';
@@ -66,6 +66,10 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
   const { soldOut, toggleSoldOut, isSoldOut } = useSoldOut();
   const formRef = useRef(null);
 
+  useEffect(() => {
+    if (!submitting) setManualNumber(nextNumber(orders));
+  }, [orders, submitting]);
+
   const cooking = useMemo(() => orders
     .filter(o => o.status !== 'entregado' && o.status !== 'listo' && o.status !== 'cancelado')
     .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)), [orders]);
@@ -97,12 +101,13 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
     const order = { id: createOrderId(), number: Number(manualNumber), customer: customer.trim(), notes: notes.trim(), items, status: 'pendiente', createdAt: Date.now() };
     setSubmitting(true);
     try {
-      await addOrder(order);
-      showToast(`Pedido ${fmtOrderNumber(order.number)} enviado a cocina.`);
+      const savedOrder = await addOrder(order);
+      const finalOrder = savedOrder || order;
+      showToast(`Pedido ${fmtOrderNumber(finalOrder.number)} enviado a cocina.`);
       setDraft([]);
       setCustomer('');
       setNotes('');
-      setManualNumber(nextNumber([...orders, order]));
+      setManualNumber(nextNumber([...orders, finalOrder]));
     } finally {
       setSubmitting(false);
     }
@@ -130,7 +135,7 @@ export default function CajaView({ orders, addOrder, onEdit, onUpdate, onDelete,
       <div className="layout caja-layout">
         <form ref={formRef} className="card caja-form" onSubmit={handleSubmit}>
           <div className="form-section">
-            <h2>Pedido <input className="number-input" type="number" min="1" value={manualNumber} onChange={e => setManualNumber(e.target.value)} /></h2>
+            <h2>Pedido <input className="number-input" type="number" min="1" value={manualNumber} readOnly title="El número se asigna automáticamente y se sincroniza entre dispositivos." /></h2>
             <label className="field-label">Nombre o referencia (opcional)</label>
             <input placeholder="Nombre..." value={customer} onChange={e => setCustomer(e.target.value)} />
           </div>

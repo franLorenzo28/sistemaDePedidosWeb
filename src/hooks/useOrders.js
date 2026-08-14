@@ -1,6 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getSupabase, loadSupabase, supabaseReady } from '../lib/supabase.js';
+import {
+  get,
+  onValue,
+  ref,
+  remove,
+  runTransaction,
+  set,
+  update,
+} from 'firebase/database';
+import { getFirebaseDb, loadFirebase, firebaseReady } from '../lib/firebase.js';
 import { showToast } from '../lib/toast.js';
+import { nextNumber } from '../lib/utils.js';
 
 export { showToast } from '../lib/toast.js';
 
@@ -13,22 +23,58 @@ function loadLocal() {
 function loadSoundPref() {
   try { return JSON.parse(localStorage.getItem('lobabi-sound') || 'true'); } catch { return true; }
 }
+
 function saveSoundPref(val) { localStorage.setItem('lobabi-sound', JSON.stringify(val)); }
 
-function mapRow(row) {
+function normalizeItems(items) {
+  if (Array.isArray(items)) return items;
+  return Object.values(items || {});
+}
+
+function mapOrder(id, row = {}) {
   return {
-    id: row.id, number: row.number, customer: row.customer, notes: row.notes,
-    items: row.items, status: row.status, createdAt: row.created_at
+    id,
+    number: row.number,
+    customer: row.customer,
+    notes: row.notes,
+    items: normalizeItems(row.items),
+    status: row.status,
+    createdAt: row.created_at,
   };
+}
+
+function mapOrders(snapshot) {
+  const data = snapshot.val() || {};
+  return Object.entries(data)
+    .map(([id, row]) => mapOrder(id, row))
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+}
+
+function orderData(order) {
+  return {
+    number: order.number,
+    customer: order.customer,
+    notes: order.notes,
+    items: order.items,
+    status: order.status,
+    created_at: order.createdAt,
+  };
+}
+
+function calculateStatus(items, fallbackStatus = 'pendiente') {
+  const statuses = items.map(item => item.status || fallbackStatus);
+  return statuses.every(status => status === 'entregado') ? 'entregado'
+    : statuses.every(status => status === 'listo' || status === 'entregado') ? 'listo'
+      : statuses.some(status => status !== 'pendiente') ? 'preparando' : 'pendiente';
 }
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loaded, setLoaded] = useState(false);
-  const [connection, setConnection] = useState(supabaseReady ? 'connecting' : 'local');
+  const [connection, setConnection] = useState(firebaseReady ? 'connecting' : 'local');
   const [soundEnabled, setSoundEnabled] = useState(loadSoundPref);
 
-  const channelRef = useRef(null);
+  const listenerRef = useRef(null);
   const ordersRef = useRef([]);
   const knownIdsRef = useRef(new Set());
   const loadedRef = useRef(false);
@@ -46,14 +92,14 @@ export function useOrders() {
 
   const setAllOrders = useCallback((next) => {
     ordersRef.current = next;
-    knownIdsRef.current = new Set(next.map(o => o.id));
+    knownIdsRef.current = new Set(next.map(order => order.id));
     setOrders(next);
     persistOrders(next);
   }, [persistOrders]);
 
   const insertOrder = useCallback((order) => {
     const isNew = !knownIdsRef.current.has(order.id);
-    const next = [...ordersRef.current.filter(o => o.id !== order.id), order];
+    const next = [...ordersRef.current.filter(item => item.id !== order.id), order];
     setAllOrders(next);
     return isNew;
   }, [setAllOrders]);
@@ -62,8 +108,8 @@ export function useOrders() {
     if (!newOrders.length) return;
     const label = newOrders.length === 1 ? `Nuevo pedido ${newOrders[0].number}` : `${newOrders.length} pedidos nuevos`;
     showToast(`🔔 ${label}: revisar cocina.`);
-    newOrders.forEach(o => {
-      window.dispatchEvent(new CustomEvent('new-order-popup', { detail: { order: o } }));
+    newOrders.forEach(order => {
+      window.dispatchEvent(new CustomEvent('new-order-popup', { detail: { order } }));
     });
     document.title = `🔔 ${label} · Lobabi`;
     setTimeout(() => { document.title = 'Lobabi · Cantina'; }, 5000);
@@ -79,71 +125,71 @@ export function useOrders() {
     let cancel = false;
     let refreshInterval = null;
 
-    if (!supabaseReady) {
+    const useLocalMode = () => {
       const local = loadLocal();
       loadedRef.current = true;
       setAllOrders(local);
       setLoaded(true);
       setConnection('local');
+    };
+
+    if (!firebaseReady) {
+      useLocalMode();
       return () => { cancel = true; };
     }
 
     async function init() {
       setConnection('connecting');
-      const supabase = await loadSupabase();
-      if (cancel || !supabase) return;
 
-      async function refresh() {
-        const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: true });
-        if (cancel) return;
-        if (error) {
-          showToast(`Supabase: ${error.message}`);
-          setConnection('reconnecting');
-          return;
-        }
-        const mapped = (data || []).map(mapRow);
-        if (loadedRef.current) {
-          notifyNewOrders(mapped.filter(o => !knownIdsRef.current.has(o.id)));
-        }
-        setAllOrders(mapped);
-        if (!loadedRef.current) {
-          loadedRef.current = true;
-          setLoaded(true);
-        }
-        setConnection('connected');
-      }
-      refreshRef.current = refresh;
+      try {
+        const db = await loadFirebase();
+        if (cancel || !db) return;
 
-      await refresh();
-      if (cancel) return;
+        const ordersPath = ref(db, 'orders');
 
-      channelRef.current = supabase.channel('orders-live')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
+        async function refresh() {
+          const snapshot = await get(ordersPath);
           if (cancel) return;
-          const order = mapRow(payload.new);
-          const isNew = insertOrder(order);
-          if (isNew && loadedRef.current) notifyNewOrders([order]);
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
-          if (cancel) return;
-          const incoming = mapRow(payload.new);
-          if (!knownIdsRef.current.has(incoming.id)) {
-            setAllOrders([...ordersRef.current, incoming]);
-            return;
+          const mapped = mapOrders(snapshot);
+          if (loadedRef.current) {
+            notifyNewOrders(mapped.filter(order => !knownIdsRef.current.has(order.id)));
           }
-          setAllOrders(ordersRef.current.map(o => o.id === incoming.id ? incoming : o));
-        })
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'orders' }, payload => {
+          setAllOrders(mapped);
+          if (!loadedRef.current) {
+            loadedRef.current = true;
+            setLoaded(true);
+          }
+          setConnection('connected');
+        }
+
+        refreshRef.current = refresh;
+        await refresh();
+        if (cancel) return;
+
+        listenerRef.current = onValue(ordersPath, snapshot => {
           if (cancel) return;
-          setAllOrders(ordersRef.current.filter(o => o.id !== payload.old.id));
-        })
-        .subscribe(status => {
+          const mapped = mapOrders(snapshot);
+          if (loadedRef.current) {
+            notifyNewOrders(mapped.filter(order => !knownIdsRef.current.has(order.id)));
+          }
+          setAllOrders(mapped);
+          if (!loadedRef.current) {
+            loadedRef.current = true;
+            setLoaded(true);
+          }
+          setConnection('connected');
+        }, error => {
           if (cancel) return;
-          if (status === 'SUBSCRIBED') setConnection('connected');
-          else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') setConnection('reconnecting');
+          showToast(`Firebase: ${error.message}`);
+          setConnection('reconnecting');
         });
 
-      refreshInterval = setInterval(refresh, REFRESH_INTERVAL_MS);
+        refreshInterval = setInterval(refresh, REFRESH_INTERVAL_MS);
+      } catch (error) {
+        if (cancel) return;
+        showToast(`Firebase: ${error.message}. Se usará el modo local.`);
+        useLocalMode();
+      }
     }
 
     init();
@@ -161,137 +207,167 @@ export function useOrders() {
       clearInterval(refreshInterval);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      channelRef.current?.unsubscribe?.();
+      listenerRef.current?.();
       if (pendingSaveRef.current != null) {
         try { localStorage.setItem('lobabi-orders', JSON.stringify(pendingSaveRef.current)); } catch { }
       }
     };
-  }, [setAllOrders, insertOrder, notifyNewOrders]);
+  }, [setAllOrders, notifyNewOrders]);
 
   const refreshOrders = useCallback(() => {
-    if (!supabaseReady) return;
+    if (!firebaseReady) return;
     setConnection('reconnecting');
     refreshRef.current?.();
   }, []);
 
   const addOrder = useCallback(async (order) => {
-    if (!supabaseReady) {
+    if (!firebaseReady) {
       insertOrder(order);
       loadedRef.current = true;
       setLoaded(true);
       window.dispatchEvent(new CustomEvent('new-order-popup', { detail: { order } }));
       return;
     }
+
     if (knownIdsRef.current.has(order.id)) return;
-    const supabase = getSupabase();
-    if (!supabase) { showToast('Sin conexión. Reintentá en un momento.'); return; }
-    const { error } = await supabase.from('orders').insert({
-      id: order.id, number: order.number, customer: order.customer,
-      notes: order.notes, items: order.items, status: order.status, created_at: order.createdAt
-    });
-    if (error) { showToast(`Supabase: ${error.message}`); throw error; }
-    insertOrder(order);
+    const db = getFirebaseDb();
+    if (!db) { showToast('Sin conexión. Reintentá en un momento.'); return; }
+    try {
+      const counterResult = await runTransaction(ref(db, 'meta/orderNumber'), current => {
+        const lastNumber = Number(current);
+        if (!Number.isFinite(lastNumber) || lastNumber <= 0) return Number(nextNumber(ordersRef.current));
+        return lastNumber >= 100 ? 1 : lastNumber + 1;
+      });
+      if (!counterResult.committed) throw new Error('No se pudo reservar un número de pedido.');
+
+      const savedOrder = { ...order, number: Number(counterResult.snapshot.val()) };
+      await set(ref(db, `orders/${savedOrder.id}`), orderData(savedOrder));
+      insertOrder(savedOrder);
+      return savedOrder;
+    } catch (error) {
+      showToast(`Firebase: ${error.message}`);
+      throw error;
+    }
   }, [insertOrder]);
 
-  const updateOrder = useCallback(async (id, status, station, assignedTo) => {
-    const prev = ordersRef.current;
-    const found = prev.find(o => o.id === id);
+  const updateOrder = useCallback(async (id, status, station) => {
+    const previous = ordersRef.current;
+    const found = previous.find(order => order.id === id);
     if (!found) return false;
+
     let next;
     if (station) {
-      const updatedItems = found.items.map(item =>
-        item.station === station
-          ? { ...item, status }
-          : item
-      );
-      const itemStatuses = updatedItems.map(item => item.status || found.status || 'pendiente');
-      const newStatus = itemStatuses.every(s => s === 'entregado') ? 'entregado'
-        : itemStatuses.every(s => s === 'listo' || s === 'entregado') ? 'listo'
-        : itemStatuses.some(s => s !== 'pendiente') ? 'preparando' : 'pendiente';
-      next = prev.map(o => o.id === id ? { ...o, items: updatedItems, status: newStatus } : o);
+      const updatedItems = found.items.map(item => item.station === station ? { ...item, status } : item);
+      const newStatus = calculateStatus(updatedItems, found.status);
+      next = previous.map(order => order.id === id ? { ...order, items: updatedItems, status: newStatus } : order);
     } else {
-      next = prev.map(o => o.id === id ? { ...o, status } : o);
+      next = previous.map(order => order.id === id ? { ...order, status } : order);
     }
     setAllOrders(next);
-    if (!supabaseReady) return true;
-    const supabase = getSupabase();
-    if (!supabase) return true;
-    const updated = next.find(o => o.id === id);
-    if (station) {
-      const { data, error } = await supabase.rpc('set_item_status', { p_order_id: id, p_station: station, p_status: status });
-      if (!error && data) {
-        const serverOrder = mapRow(data);
-        setAllOrders(ordersRef.current.map(o => o.id === serverOrder.id ? serverOrder : o));
+
+    if (!firebaseReady) return true;
+    const db = getFirebaseDb();
+    if (!db) return true;
+
+    try {
+      if (station) {
+        const result = await runTransaction(ref(db, `orders/${id}`), current => {
+          if (!current) return;
+          const currentItems = normalizeItems(current.items);
+          const updatedItems = currentItems.map(item => item.station === station ? { ...item, status } : item);
+          const updatedStatus = calculateStatus(updatedItems, current.status);
+          return { ...current, items: updatedItems, status: updatedStatus, updated_at: Date.now() };
+        });
+        if (!result.committed) return false;
+        const serverOrder = mapOrder(id, result.snapshot.val());
+        setAllOrders(ordersRef.current.map(order => order.id === id ? serverOrder : order));
         return true;
       }
-      if (error) {
-        const { error: fallbackError } = await supabase.from('orders')
-          .update({ status: updated.status, items: updated.items, updated_at: Date.now() })
-          .eq('id', id);
-        if (fallbackError) { showToast(`Supabase: ${fallbackError.message}`); return false; }
-        return true;
-      }
+
+      const updated = next.find(order => order.id === id);
+      await update(ref(db, `orders/${id}`), { status: updated.status, updated_at: Date.now() });
       return true;
+    } catch (error) {
+      showToast(`Firebase: ${error.message}`);
+      return false;
     }
-    const { error } = await supabase.from('orders')
-      .update({ status: updated.status, items: updated.items, updated_at: Date.now() })
-      .eq('id', id);
-    if (error) { showToast(`Supabase: ${error.message}`); return false; }
-    return true;
   }, [setAllOrders]);
 
   const assignItems = useCallback(async (id, station, assignedTo) => {
-    const prev = ordersRef.current;
-    const found = prev.find(o => o.id === id);
+    const previous = ordersRef.current;
+    const found = previous.find(order => order.id === id);
     if (!found) return false;
-    const updatedItems = found.items.map(item =>
-      item.station === station && !item.assignedTo
-        ? { ...item, assignedTo }
-        : item
-    );
-    const next = prev.map(o => o.id === id ? { ...o, items: updatedItems } : o);
+    const updatedItems = found.items.map(item => (
+      item.station === station && !item.assignedTo ? { ...item, assignedTo } : item
+    ));
+    const next = previous.map(order => order.id === id ? { ...order, items: updatedItems } : order);
     setAllOrders(next);
-    if (!supabaseReady) return true;
-    const supabase = getSupabase();
-    if (!supabase) return true;
-    const { data, error } = await supabase.rpc('assign_item', { p_order_id: id, p_station: station, p_assigned_to: assignedTo });
-    if (!error && data) {
-      const serverOrder = mapRow(data);
-      setAllOrders(ordersRef.current.map(o => o.id === serverOrder.id ? serverOrder : o));
+
+    if (!firebaseReady) return true;
+    const db = getFirebaseDb();
+    if (!db) return true;
+
+    try {
+      const result = await runTransaction(ref(db, `orders/${id}`), current => {
+        if (!current) return;
+        const currentItems = normalizeItems(current.items);
+        const serverItems = currentItems.map(item => (
+          item.station === station && !item.assignedTo ? { ...item, assignedTo } : item
+        ));
+        return { ...current, items: serverItems, updated_at: Date.now() };
+      });
+      if (!result.committed) return false;
+      const serverOrder = mapOrder(id, result.snapshot.val());
+      setAllOrders(ordersRef.current.map(order => order.id === id ? serverOrder : order));
       return true;
+    } catch (error) {
+      showToast(`Firebase: ${error.message}`);
+      return false;
     }
-    if (error) {
-      const { error: fallbackError } = await supabase.from('orders')
-        .update({ items: updatedItems, updated_at: Date.now() })
-        .eq('id', id);
-      if (fallbackError) { showToast(`Supabase: ${fallbackError.message}`); return false; }
-      return true;
-    }
-    return true;
   }, [setAllOrders]);
 
   const saveEditedOrder = useCallback(async (order) => {
-    const next = ordersRef.current.map(o => o.id === order.id ? order : o);
+    const next = ordersRef.current.map(current => current.id === order.id ? order : current);
     setAllOrders(next);
-    if (!supabaseReady) return true;
-    const supabase = getSupabase();
-    if (!supabase) return true;
-    const { error } = await supabase.from('orders')
-      .update({ number: order.number, customer: order.customer, notes: order.notes, items: order.items, status: order.status, updated_at: Date.now() })
-      .eq('id', order.id);
-    if (error) { showToast(`Supabase: ${error.message}`); return false; }
-    return true;
+    if (!firebaseReady) return true;
+    const db = getFirebaseDb();
+    if (!db) return true;
+
+    try {
+      await update(ref(db, `orders/${order.id}`), { ...orderData(order), updated_at: Date.now() });
+      return true;
+    } catch (error) {
+      showToast(`Firebase: ${error.message}`);
+      return false;
+    }
   }, [setAllOrders]);
 
   const deleteOrder = useCallback(async (id) => {
-    setAllOrders(ordersRef.current.filter(o => o.id !== id));
-    if (!supabaseReady) return true;
-    const supabase = getSupabase();
-    if (!supabase) return true;
-    const { error } = await supabase.from('orders').delete().eq('id', id);
-    if (error) { showToast(`Supabase: ${error.message}`); return false; }
-    return true;
+    setAllOrders(ordersRef.current.filter(order => order.id !== id));
+    if (!firebaseReady) return true;
+    const db = getFirebaseDb();
+    if (!db) return true;
+
+    try {
+      await remove(ref(db, `orders/${id}`));
+      return true;
+    } catch (error) {
+      showToast(`Firebase: ${error.message}`);
+      return false;
+    }
   }, [setAllOrders]);
 
-  return { orders, loaded, connection, addOrder, updateOrder, assignItems, saveEditedOrder, deleteOrder, refreshOrders, toggleSound, soundEnabled };
+  return {
+    orders,
+    loaded,
+    connection,
+    addOrder,
+    updateOrder,
+    assignItems,
+    saveEditedOrder,
+    deleteOrder,
+    refreshOrders,
+    toggleSound,
+    soundEnabled,
+  };
 }

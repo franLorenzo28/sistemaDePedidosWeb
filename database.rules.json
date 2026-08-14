@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "orders": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "products": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "meta": {
+      "orderNumber": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
+      }
+    }
+  }
+}
